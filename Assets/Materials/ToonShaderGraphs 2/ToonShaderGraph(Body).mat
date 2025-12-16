@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ToonShaderGraph(Body)
-  m_Shader: {fileID: -6465566751694194690, guid: dfb22320a5ccb4d31a623f0ff466f1fa, type: 3}
+  m_Shader: {fileID: 4800000, guid: cb684cc23d78649bf8b4497a0c6011c1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords: []
@@ -49,7 +49,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTexture:
@@ -102,20 +102,28 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _Edge_Strength: 0.5
+    - _EnableInnerLines: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
+    - _InnerLineBlur: 2.0
+    - _InnerLineStrength: 0.75
+    - _InnerLineThreshold: 0.035
     - _Lighting_Steps: 3
     - _Lighting_cutoff: -0.1
     - _Lighting_cutoff_light: -0
     - _Metallic: 0
     - _OcclusionStrength: 1
+    - _OuterOutlineWidth: 0.01
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
     - _ReceiveShadows: 1
+    - _RimPower: 3
+    - _ShadowStrength: 0.7
     - _Shadow_Brightness: 0.5
+    - _ShowTextureOnly: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
@@ -123,13 +131,21 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _Texel_Size: 0.001
+    - _TextureIntensity: 1
+    - _ToonSmoothness: 0.01
+    - _ToonSteps: 3
+    - _ToonThreshold: 0.289
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:
+    - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _Edge_Color: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
+    - _InnerLineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _RimColor: {r: 0.764151, g: 0.764151, b: 0.764151, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
