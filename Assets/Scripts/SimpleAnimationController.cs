@@ -110,24 +110,15 @@ public class SimpleAnimationController : MonoBehaviour
 
     /// <summary>
     /// Checks if the animator controller has the specified state.
+    /// Note: This is a simplified check. Unity will automatically log warnings if the state doesn't exist.
     /// </summary>
     /// <param name="stateName">Name of the state to check</param>
-    /// <returns>True if the state exists, false otherwise</returns>
+    /// <returns>True (simplified - assumes state exists, Unity handles warnings)</returns>
     private bool HasState(string stateName)
     {
-        if (animator == null || animator.runtimeAnimatorController == null)
-            return false;
-
-        // Try to get the state hash
-        int stateHash = Animator.StringToHash(stateName);
-        
-        // Check if we can get state info (this will throw no error if state doesn't exist)
-        foreach (AnimatorControllerParameter param in animator.parameters)
-        {
-            // This is just to ensure the animator is initialized
-        }
-        
-        return true; // Simplified check - Unity will log warning if state doesn't exist when playing
+        // Simplified validation - just check that animator and controller are assigned
+        // Unity's Animator.Play() will automatically log a warning if the state doesn't exist
+        return animator != null && animator.runtimeAnimatorController != null;
     }
 
     /// <summary>
