@@ -2,6 +2,10 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 {
     Properties
     {
+        [Header(Debug Mode)]
+        [Toggle] _UseDebugDefaults ("Use Debug Defaults (overrides all settings below)", Float) = 0
+        [Space(10)]
+        
         _Color ("Main Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
         _TextureIntensity ("Texture Intensity", Range(0, 1)) = 1.0
@@ -19,8 +23,9 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         // Inner lines
         [Toggle] _EnableInnerLines ("Enable Inner Lines", Float) = 1
         _InnerLineColor ("Inner Line Color", Color) = (0,0,0,1)
-        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 1.0)) = 0.05
-        _InnerLineBlur ("Inner Line Sample Distance", Range(0.5, 10.0)) = 1.0
+        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 0.5)) = 0.03
+        _InnerLineBlur ("Inner Line Sample Distance", Range(0.5, 10.0)) = 2.0
+        _InnerLineStrength ("Inner Line Strength", Range(0, 1)) = 1.0
 
         // Rim
         _RimColor ("Rim Color", Color) = (1,1,1,1)
@@ -28,6 +33,10 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 
         // Ambient
         _AmbientColor ("Ambient Color", Color) = (0.3,0.3,0.3,1)
+        
+        // Transparency
+        [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
         
         // Debug
         [Toggle] _ShowTextureOnly ("Show Texture Only (Debug)", Float) = 0
@@ -58,15 +67,22 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
             {
                 float4 vertex : POSITION;
                 float3 normal : NORMAL;
+                float2 uv : TEXCOORD0;
             };
 
             struct v2f_outline
             {
                 float4 pos : SV_POSITION;
+                float2 uv : TEXCOORD0;
             };
 
+            TEXTURE2D(_MainTex);
+            SAMPLER(sampler_MainTex);
+            float4 _MainTex_ST;
             float _OuterOutlineWidth;
             float4 _OuterOutlineColor;
+            float _AlphaCutoff;
+            float _EnableAlphaTest;
 
             v2f_outline vert_outline(appdata_outline v)
             {
@@ -81,11 +97,18 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 
                 // Transform to clip
                 o.pos = TransformWorldToHClip(posWS);
+                o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }
 
             half4 frag_outline(v2f_outline i) : SV_Target
             {
+                // Sample texture alpha and clip transparent pixels (if enabled)
+                if (_EnableAlphaTest > 0.5)
+                {
+                    half alpha = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).a;
+                    clip(alpha - _AlphaCutoff);
+                }
                 return _OuterOutlineColor;
             }
             ENDHLSL
@@ -143,7 +166,12 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
             float4 _InnerLineColor;
             float _InnerLineThreshold;
             float _InnerLineBlur;
+            float _InnerLineStrength;
+            float _EnableAlphaTest;
             float _ShowTextureOnly;
+            float _AlphaCutoff;
+            float _UseDebugDefaults;
+            float4 _OuterOutlineColor;
 
             v2f vert(appdata v)
             {
@@ -172,6 +200,26 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
             {
                 // Sample albedo
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
+                
+                // Alpha test - discard transparent pixels (for eyelashes, if enabled)
+                if (_EnableAlphaTest > 0.5)
+                {
+                    clip(texColor.a - _AlphaCutoff);
+                }
+                
+                // Debug mode: override with default values
+                if (_UseDebugDefaults > 0.5)
+                {
+                    _TextureIntensity = 1.0;
+                    _ToonSteps = 5.0;
+                    _ToonThreshold = 1.0;
+                    _ToonSmoothness = 0.03;
+                    _ShadowStrength = 0.6;
+                    _RimPower = 5.0;
+                    _OuterOutlineColor = float4(0, 0, 0, 1);
+                    _InnerLineColor = float4(0, 0, 0, 1);
+                }
+                
                 // Blend texture with color, controlled by texture intensity
                 half3 baseColor = lerp(_Color.rgb, texColor.rgb * _Color.rgb, _TextureIntensity);
                 half4 albedo = half4(baseColor, texColor.a * _Color.a);
@@ -210,36 +258,183 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 
                 float3 shaded = albedo.rgb * lighting + rimLighting;
 
-                // -------- INNER-LINE DETECTION (Simple Max Difference) --------
-                if (_EnableInnerLines > 0.5)
-                {
-                    // Sample offset based on blur parameter
-                    float offset = _InnerLineBlur * 0.01;
-                    
-                    // Sample RAW texture at center
-                    half4 centerSample = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
-                    float center = dot(centerSample.rgb, float3(0.299, 0.587, 0.114));
-                    
-                    // Sample 4 cardinal directions from RAW texture
-                    float n  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114));
-                    float s  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114));
-                    float e  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114));
-                    float w  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114));
-                    
-                    // Find maximum absolute difference from center
-                    float maxDiff = 0.0;
-                    maxDiff = max(maxDiff, abs(center - n));
-                    maxDiff = max(maxDiff, abs(center - s));
-                    maxDiff = max(maxDiff, abs(center - e));
-                    maxDiff = max(maxDiff, abs(center - w));
-                    
-                    // Simple hard threshold
-                    float edge = (maxDiff > _InnerLineThreshold) ? 1.0 : 0.0;
-                    
-                    // Mix inner line color
-                    shaded = lerp(shaded, _InnerLineColor.rgb, edge);
-                }
+//                // -------- INNER-LINE DETECTION (Sobel + Non-Maximum Suppression) --------
+// if (_EnableInnerLines > 0.5)
+// {
+//     float offset = _InnerLineBlur * 0.001;
+    
+//     // Sobel sampling (same as above)
+//     float tl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float t  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float tr = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float l  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float c  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv).rgb, float3(0.299, 0.587, 0.114));
+//     float r  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float bl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float b  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float br = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+    
+//     float sobelX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+//     float sobelY = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
+//     float edgeMag = sqrt(sobelX * sobelX + sobelY * sobelY);
+    
+//     // Determine gradient direction and check if we're at a local maximum
+//     float2 gradDir = normalize(float2(sobelX, sobelY) + 0.0001);
+    
+//     // Sample along gradient direction
+//     float2 posOffset = gradDir * offset;
+//     float edgePlus = sqrt(
+//         pow(dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + posOffset + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114)) -
+//             dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + posOffset + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114)), 2.0) +
+//         pow(dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + posOffset + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114)) -
+//             dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + posOffset + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114)), 2.0));
+    
+//     float edgeMinus = sqrt(
+//         pow(dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv - posOffset + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114)) -
+//             dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv - posOffset + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114)), 2.0) +
+//         pow(dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv - posOffset + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114)) -
+//             dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv - posOffset + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114)), 2.0));
+    
+//     // Only keep if local maximum
+//     float isMax = (edgeMag >= edgePlus && edgeMag >= edgeMinus) ? 1.0 : 0.0;
+//     float edge = step(_InnerLineThreshold, edgeMag) * isMax * _InnerLineStrength;
+    
+//     shaded = lerp(shaded, _InnerLineColor.rgb, edge);
+// }
 
+
+// // -------- IMPROVED INNER-LINE DETECTION (Normal + Texture Sobel) --------
+// if (_EnableInnerLines > 0.5)
+// {
+//     float offset = _InnerLineBlur * 0.001;
+    
+//     // ===== NORMAL-BASED EDGE DETECTION =====
+//     // Sample neighboring normals using screen-space derivatives
+//     float3 normalCenter = nWS;
+    
+//     // Use ddx/ddy to detect normal discontinuities (geometry edges)
+//     float3 normalDdx = ddx(nWS);
+//     float3 normalDdy = ddy(nWS);
+    
+//     // Calculate normal variation magnitude
+//     float normalEdge = length(normalDdx) + length(normalDdy);
+//     normalEdge = saturate(normalEdge * 10.0); // Scale for visibility
+    
+//     // ===== IMPROVED TEXTURE-BASED EDGE DETECTION =====
+//     // Use larger kernel for smoother edges
+//     float offset2 = offset * 2.0;
+    
+//     // Sample with wider spacing to reduce noise
+//     float tl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset2, offset2)).rgb, float3(0.299, 0.587, 0.114));
+//     float t  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, offset2)).rgb, float3(0.299, 0.587, 0.114));
+//     float tr = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(offset2, offset2)).rgb, float3(0.299, 0.587, 0.114));
+//     float l  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(-offset2, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float c  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv).rgb, float3(0.299, 0.587, 0.114));
+//     float r  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset2, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float bl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(-offset2, -offset2)).rgb, float3(0.299, 0.587, 0.114));
+//     float b  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -offset2)).rgb, float3(0.299, 0.587, 0.114));
+//     float br = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(offset2, -offset2)).rgb, float3(0.299, 0.587, 0.114));
+    
+//     float sobelX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+//     float sobelY = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
+//     float textureEdge = sqrt(sobelX * sobelX + sobelY * sobelY);
+    
+//     // ===== COMBINE EDGES WITH SMOOTH THRESHOLD =====
+//     // Combine normal and texture edges (normal edges are more reliable for geometry)
+//     float combinedEdge = max(normalEdge * 0.8, textureEdge);
+    
+//     // Use smoothstep instead of hard step for cleaner lines
+//     float lowerThreshold = _InnerLineThreshold * 0.5;
+//     float upperThreshold = _InnerLineThreshold * 1.5;
+//     float edge = smoothstep(lowerThreshold, upperThreshold, combinedEdge) * _InnerLineStrength;
+    
+//     // Apply inner line color
+//     shaded = lerp(shaded, _InnerLineColor. rgb, edge);
+// }
+
+
+// // -------- CAMERA-INDEPENDENT INNER-LINE DETECTION --------
+// if (_EnableInnerLines > 0.5)
+// {
+//     // Use UV-space offset instead of screen-space
+//     // This makes lines stable regardless of camera position
+//     float2 texelSize = float2(1.0 / 1024.0, 1.0 / 1024.0); // Adjust to your texture resolution
+//     float offset = _InnerLineBlur * texelSize. x * 10.0;
+    
+//     // ===== UV-SPACE SOBEL (Camera Independent) =====
+//     float tl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float t  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float tr = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float l  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float r  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+//     float bl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float b  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114));
+//     float br = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN. uv + float2(offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+    
+//     float sobelX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+//     float sobelY = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
+//     float textureEdge = sqrt(sobelX * sobelX + sobelY * sobelY);
+    
+//     // ===== OBJECT-SPACE NORMAL EDGE (Camera Independent) =====
+//     // Use fwidth in UV space for stable normal discontinuity
+//     float3 normalDdx = ddx(IN.nWS) / max(0.0001, fwidth(IN.uv. x));
+//     float3 normalDdy = ddy(IN.nWS) / max(0.0001, fwidth(IN.uv.y));
+//     float normalEdge = saturate((length(normalDdx) + length(normalDdy)) * _InnerLineBlur);
+    
+//     // Combine:  prioritize texture edges (they're fully UV-based and stable)
+//     float combinedEdge = max(textureEdge, normalEdge * 0.3);
+    
+//     // Smooth threshold
+//     float edge = smoothstep(_InnerLineThreshold * 0.7, _InnerLineThreshold * 1.3, combinedEdge) * _InnerLineStrength;
+    
+//     shaded = lerp(shaded, _InnerLineColor. rgb, edge);
+// }
+if (_EnableInnerLines > 0.5)
+{
+    // Texture-based edge detection with aggressive blur to eliminate artifacts
+    float offset = _InnerLineBlur * 0.001;
+    
+    // Pre-blur with larger 9-tap Gaussian filter to smooth noise
+    float blurOffset = offset * 0.7;
+    float c = 0.0;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv).rgb, float3(0.299, 0.587, 0.114)) * 0.25;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(blurOffset, blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-blurOffset, blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
+    c += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
+    
+    // Sample 8 directions for Sobel operator
+    float tl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+    float t  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, offset)).rgb, float3(0.299, 0.587, 0.114));
+    float tr = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, offset)).rgb, float3(0.299, 0.587, 0.114));
+    float l  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+    float r  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, 0)).rgb, float3(0.299, 0.587, 0.114));
+    float bl = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+    float b  = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -offset)).rgb, float3(0.299, 0.587, 0.114));
+    float br = dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(offset, -offset)).rgb, float3(0.299, 0.587, 0.114));
+    
+    // Sobel operator
+    float sobelX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
+    float sobelY = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
+    float edgeMagnitude = sqrt(sobelX * sobelX + sobelY * sobelY);
+    
+    // Aggressive filtering: only show edges above noise threshold
+    // Use wider smoothstep range and add minimum cutoff
+    float minEdge = _InnerLineThreshold * 0.2; // Ignore very weak edges (noise)
+    float maxEdge = _InnerLineThreshold * 2.0; // Wider range for smoother transition
+    
+    float edge = smoothstep(minEdge, maxEdge, edgeMagnitude);
+    edge = smoothstep(0.3, 0.7, edge); // Second pass for ultra-smooth result
+    edge = pow(edge, 1.5); // Power curve to suppress weak edges further
+    edge *= _InnerLineStrength;
+    
+    shaded = lerp(shaded, _InnerLineColor.rgb, edge);
+}
+  
                 return half4(shaded, albedo.a);
             }
             ENDHLSL

@@ -74,15 +74,25 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             {
                 v2f_outline o;
 
-                // World position and normal using URP functions
+                // Get clip space position first
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(v.normal);
-
-                // Expand along world normal
-                float3 posWS = positionInputs.positionWS + normalInputs.normalWS * _OuterOutlineWidth;
-
-                // Transform to clip
-                o.pos = TransformWorldToHClip(posWS);
+                
+                // Transform normal to clip space
+                float3 clipNormal = TransformWorldToHClipDir(normalInputs.normalWS);
+                
+                // Get clip position
+                float4 clipPos = TransformWorldToHClip(positionInputs.positionWS);
+                
+                // Calculate screen-space consistent outline width
+                // Multiply by clipPos.w to compensate for perspective divide
+                // This keeps the outline the same screen-space thickness regardless of distance
+                float2 offset = normalize(clipNormal.xy) * _OuterOutlineWidth * clipPos.w * 0.1;
+                
+                // Apply offset in clip space (before perspective divide)
+                clipPos.xy += offset;
+                
+                o.pos = clipPos;
                 return o;
             }
 
