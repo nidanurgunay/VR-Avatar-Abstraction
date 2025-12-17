@@ -49,7 +49,7 @@ Material:
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.153
+    - _InnerLineThreshold: 0.2
     - _InnerLineWidth: 2.16
     - _LineMapStrength: 1
     - _OuterOutlineWidth: 0.01
