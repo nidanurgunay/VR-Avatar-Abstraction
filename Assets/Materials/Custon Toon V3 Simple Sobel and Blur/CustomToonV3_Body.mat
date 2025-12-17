@@ -49,12 +49,12 @@ Material:
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.153
-    - _InnerLineWidth: 2.16
+    - _InnerLineThreshold: 0.275
+    - _InnerLineWidth: 2
     - _LineMapStrength: 1
     - _OuterOutlineWidth: 0.01
     - _OutlineWidth: 0.005
-    - _RimPower: 5
+    - _RimPower: 4.76
     - _ShadowStrength: 0.6
     - _ShowTextureOnly: 0
     - _SpecPower: 16
