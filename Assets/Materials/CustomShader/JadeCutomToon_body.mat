@@ -7,7 +7,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: JadeToonMaterial Sneakers
+  m_Name: JadeCutomToon_body
   m_Shader: {fileID: 4800000, guid: cb684cc23d78649bf8b4497a0c6011c1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
@@ -26,10 +26,6 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
-    - _LineMap:
-        m_Texture: {fileID: 0}
-        m_Scale: {x: 1, y: 1}
-        m_Offset: {x: 0, y: 0}
     - _MainTex:
         m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -45,21 +41,19 @@ Material:
     - _EnableInnerLines: 1
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
-    - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.193
+    - _InnerLineThreshold: 0.05
     - _InnerLineWidth: 2.16
-    - _LineMapStrength: 1
     - _OuterOutlineWidth: 0.011
     - _OutlineWidth: 0.005
-    - _RimPower: 2.94
-    - _ShadowStrength: 0.263
+    - _RimPower: 3
+    - _ShadowStrength: 0.7
     - _ShowTextureOnly: 0
     - _SpecPower: 16
     - _SpecThreshold: 0.9
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
     - _TextureIntensity: 1
-    - _ToonSmoothness: 0.037
+    - _ToonSmoothness: 0.0681
     - _ToonSteps: 10
     - _ToonThreshold: 1
     - _UseRamp: 0
