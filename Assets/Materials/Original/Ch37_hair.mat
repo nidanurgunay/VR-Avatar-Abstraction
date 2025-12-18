@@ -21,20 +21,20 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: Ch37_hair
-  m_Shader: {fileID: 4800000, guid: cb684cc23d78649bf8b4497a0c6011c1, type: 3}
+  m_Shader: {fileID: 4800000, guid: 933532a4fcc9baf4fa0491de14d08ed7, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords:
-  - _ALPHAPREMULTIPLY_ON
-  - _ENABLEALPHATEST_ON
-  - _ENABLEINNERLINES_ON
+  m_ValidKeywords:
+  - _ALPHATEST_ON
   - _NORMALMAP
+  - _SPECULAR_SETUP
+  m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
-  m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_DoubleSidedGI: 1
+  m_CustomRenderQueue: 2441
+  stringTagMap:
+    RenderType: TransparentCutout
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: _BaseMap
@@ -109,14 +109,15 @@ Material:
     - _AlphaToMask: 1
     - _Blend: 0
     - _BlendModePreserveSpecular: 1
+    - _BlendOp: 0
     - _BumpScale: 1
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
-    - _Cull: 2
-    - _Cutoff: 0.3
+    - _Cull: 0
+    - _Cutoff: 0.35
     - _DetailAlbedoMapScale: 1
     - _DetailNormalMapScale: 1
-    - _DstBlend: 10
+    - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _EnableAlphaTest: 1
     - _EnableInnerLines: 1
@@ -136,9 +137,10 @@ Material:
     - _QueueOffset: -9
     - _ReceiveShadows: 1
     - _RimPower: 3
+    - _SampleGI: 0
     - _ShadowStrength: 0.7
     - _ShowTextureOnly: 0
-    - _Smoothness: 0.337
+    - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
@@ -149,8 +151,9 @@ Material:
     - _ToonSteps: 3
     - _ToonThreshold: 0.5
     - _UVSec: 0
-    - _WorkflowMode: 1
-    - _ZWrite: 0
+    - _UseDebugDefaults: 0
+    - _WorkflowMode: 0
+    - _ZWrite: 1
     m_Colors:
     - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 0.8, g: 0.8, b: 0.8, a: 1}

@@ -20,6 +20,8 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
 
         _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.01
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
+        [Toggle] _UseOutlineDepthOffset ("Use Depth Offset (fix z-fighting)", Float) = 0
+        _OutlineDepthBias ("Outline Depth Bias", Range(0, 5)) = 1.0
 
         [Toggle] _EnableInnerLines ("Enable Inner Lines", Float) = 1
         _InnerLineColor ("Inner Line Color", Color) = (0,0,0,1)
@@ -44,11 +46,13 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
         {
             Name "OuterOutline"
             Cull Front
-            ZWrite Off
+            ZWrite On
+            ZTest Less
 
             HLSLPROGRAM
             #pragma vertex vert_outline
             #pragma fragment frag_outline
+            #pragma shader_feature_local _USEOUTLINEDEPTHOFFSET_ON
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct appdata_outline { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; };
@@ -61,6 +65,7 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
             float4 _OuterOutlineColor;
             float _EnableAlphaTest;
             float _AlphaCutoff;
+            float _OutlineDepthBias;
 
             v2f_outline vert_outline(appdata_outline v)
             {
@@ -68,6 +73,12 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                 VertexPositionInputs posInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normInputs = GetVertexNormalInputs(v.normal);
                 o.pos = TransformWorldToHClip(posInputs.positionWS + normInputs.normalWS * _OuterOutlineWidth);
+                
+                // Apply depth bias in clip space if enabled
+                #if _USEOUTLINEDEPTHOFFSET_ON
+                    o.pos.z -= _OutlineDepthBias * 0.0001; // Push toward camera in depth
+                #endif
+                
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }

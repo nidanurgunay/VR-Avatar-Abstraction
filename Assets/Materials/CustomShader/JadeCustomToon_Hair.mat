@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Ch37_hair
+  m_Name: JadeCustomToon_Hair
   m_Shader: {fileID: 4800000, guid: cb684cc23d78649bf8b4497a0c6011c1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0

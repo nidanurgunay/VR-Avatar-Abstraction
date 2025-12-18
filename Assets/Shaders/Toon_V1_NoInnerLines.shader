@@ -22,6 +22,8 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
         // Outer outline (geometry-based)
         _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.01
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
+        [Toggle] _UseOutlineDepthOffset ("Use Depth Offset (fix z-fighting)", Float) = 0
+        _OutlineDepthBias ("Outline Depth Bias", Range(0, 5)) = 1.0
 
         // Rim
         _RimColor ("Rim Color", Color) = (1,1,1,1)
@@ -45,14 +47,14 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
             Name "OuterOutline"
             Tags { "Queue"="Geometry+1" } 
             Cull Front
-            ZWrite Off
-            ZTest LEqual
-            Blend Off
+            ZWrite On
+            ZTest Less
 
             HLSLPROGRAM
             #pragma vertex vert_outline
             #pragma fragment frag_outline
             #pragma target 3.0
+            #pragma shader_feature_local _USEOUTLINEDEPTHOFFSET_ON
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
@@ -76,6 +78,7 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
             float4 _OuterOutlineColor;
             float _EnableAlphaTest;
             float _AlphaCutoff;
+            float _OutlineDepthBias;
 
             v2f_outline vert_outline(appdata_outline v)
             {
@@ -84,6 +87,12 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(v.normal);
                 float3 posWS = positionInputs.positionWS + normalInputs.normalWS * _OuterOutlineWidth;
                 o.pos = TransformWorldToHClip(posWS);
+                
+                // Apply depth bias in clip space if enabled
+                #if _USEOUTLINEDEPTHOFFSET_ON
+                    o.pos.z -= _OutlineDepthBias * 0.0001; // Push toward camera in depth
+                #endif
+                
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }

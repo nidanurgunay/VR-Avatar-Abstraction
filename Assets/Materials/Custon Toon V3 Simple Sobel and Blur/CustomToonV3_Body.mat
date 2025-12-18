@@ -49,10 +49,11 @@ Material:
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.275
+    - _InnerLineThreshold: 0.2
     - _InnerLineWidth: 2
     - _LineMapStrength: 1
-    - _OuterOutlineWidth: 0.01
+    - _OuterOutlineWidth: 0.005
+    - _OutlineDepthBias: 1
     - _OutlineWidth: 0.005
     - _RimPower: 4.76
     - _ShadowStrength: 0.6
@@ -66,6 +67,7 @@ Material:
     - _ToonSteps: 10
     - _ToonThreshold: 1
     - _UseDebugDefaults: 1
+    - _UseOutlineDepthOffset: 0
     - _UseRamp: 0
     - _UseTextureEdges: 1
     m_Colors:

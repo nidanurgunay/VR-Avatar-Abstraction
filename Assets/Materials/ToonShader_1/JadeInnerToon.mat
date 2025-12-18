@@ -132,7 +132,8 @@ Material:
     - _LineMapStrength: 1
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OuterOutlineWidth: 0.011
+    - _OuterOutlineWidth: 0.005
+    - _OutlineDepthBias: 1
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
@@ -150,6 +151,7 @@ Material:
     - _ToonSteps: 2.59
     - _ToonThreshold: 0.18
     - _UseDebugDefaults: 1
+    - _UseOutlineDepthOffset: 0
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:

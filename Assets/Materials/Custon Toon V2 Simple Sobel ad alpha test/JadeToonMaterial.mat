@@ -11,7 +11,8 @@ Material:
   m_Shader: {fileID: 4800000, guid: 609bd052db6904a1e99ce9e35c50f48d, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
+  m_ValidKeywords:
+  - _USEOUTLINEDEPTHOFFSET_ON
   m_InvalidKeywords:
   - _ENABLEINNERLINES_ON
   - _USEDEBUGDEFAULTS_ON
@@ -52,7 +53,8 @@ Material:
     - _InnerLineThreshold: 0.2
     - _InnerLineWidth: 2.16
     - _LineMapStrength: 1
-    - _OuterOutlineWidth: 0.01
+    - _OuterOutlineWidth: 0.005
+    - _OutlineDepthBias: 1
     - _OutlineWidth: 0.005
     - _RimPower: 5
     - _ShadowStrength: 0.6
@@ -66,6 +68,7 @@ Material:
     - _ToonSteps: 10
     - _ToonThreshold: 1
     - _UseDebugDefaults: 1
+    - _UseOutlineDepthOffset: 1
     - _UseRamp: 0
     - _UseTextureEdges: 1
     m_Colors:
