@@ -49,8 +49,8 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
     {
         Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS - Uses stencil to prevent z-fighting
-        // Rendered by ToonOutlineRendererFeature AFTER the main pass
+        // OUTER OUTLINE PASS - Rendered by ToonOutlineRendererFeature
+        // Uses Cull Front + slight depth offset to prevent flickering
         Pass
         {
             Name "ToonOutline"
@@ -60,13 +60,8 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
             ZWrite On
             ZTest LEqual
             
-            // STENCIL: Only draw where stencil is NOT 1 (outside the mesh)
-            Stencil
-            {
-                Ref 1
-                Comp NotEqual
-                Pass Keep
-            }
+            // Small polygon offset to push outline slightly behind
+            Offset 1, 1
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -143,14 +138,6 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
             Cull [_CullMode]
             ZWrite On
             ZTest LEqual
-            
-            // STENCIL: Write 1 to mark where main mesh is rendered
-            Stencil
-            {
-                Ref 1
-                Comp Always
-                Pass Replace
-            }
 
             HLSLPROGRAM
             #pragma vertex vert

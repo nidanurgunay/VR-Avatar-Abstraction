@@ -76,8 +76,67 @@ public class ToonOutlineRendererFeature : ScriptableRendererFeature
             
             // Set the profiler sampler
             profilingSampler = s_ProfilingSampler;
+            
+            // CRITICAL: Request depth and stencil attachments for this pass
+            ConfigureInput(ScriptableRenderPassInput.Depth);
         }
 
+        // Unity 6 Render Graph path (new API)
+        public override void RecordRenderGraph(RenderGraph renderGraph, ContextContainer frameData)
+        {
+            var resourceData = frameData.Get<UniversalResourceData>();
+            var renderingData = frameData.Get<UniversalRenderingData>();
+            var cameraData = frameData.Get<UniversalCameraData>();
+            
+            using (var builder = renderGraph.AddRasterRenderPass<PassData>("Toon Outline Pass", out var passData, s_ProfilingSampler))
+            {
+                // Setup pass data
+                passData.shaderTagId = shaderTagId;
+                passData.filteringSettings = filteringSettings;
+                passData.settings = settings;
+                passData.defaultSortingSettings = new SortingSettings(cameraData.camera)
+                {
+                    criteria = SortingCriteria.CommonOpaque
+                };
+                
+                // Set render targets - use the current color and depth
+                builder.SetRenderAttachment(resourceData.activeColorTexture, 0);
+                builder.SetRenderAttachmentDepth(resourceData.activeDepthTexture, AccessFlags.ReadWrite);
+                
+                // Enable depth/stencil testing
+                builder.AllowPassCulling(false);
+                
+                // Create renderer list for the outline pass
+                var drawingSettings = new DrawingSettings(shaderTagId, passData.defaultSortingSettings)
+                {
+                    enableDynamicBatching = true,
+                    enableInstancing = true
+                };
+                
+                var filterSettings = filteringSettings;
+                filterSettings.layerMask = settings.layerMask;
+                
+                var rendererListParams = new RendererListParams(renderingData.cullResults, drawingSettings, filterSettings);
+                passData.rendererListHandle = renderGraph.CreateRendererList(rendererListParams);
+                builder.UseRendererList(passData.rendererListHandle);
+                
+                builder.SetRenderFunc((PassData data, RasterGraphContext context) =>
+                {
+                    context.cmd.DrawRendererList(data.rendererListHandle);
+                });
+            }
+        }
+        
+        private class PassData
+        {
+            public ShaderTagId shaderTagId;
+            public FilteringSettings filteringSettings;
+            public ToonOutlineSettings settings;
+            public SortingSettings defaultSortingSettings;
+            public RendererListHandle rendererListHandle;
+        }
+
+        // Legacy Execute path (for compatibility mode)
 #pragma warning disable CS0672 // Member overrides obsolete member
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
 #pragma warning restore CS0672

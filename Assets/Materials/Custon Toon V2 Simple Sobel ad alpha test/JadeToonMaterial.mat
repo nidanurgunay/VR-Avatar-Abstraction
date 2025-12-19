@@ -54,7 +54,7 @@ Material:
     - _InnerLineWidth: 2.16
     - _LineMapStrength: 1
     - _OuterOutlineWidth: 0.005
-    - _OutlineDepthBias: 1
+    - _OutlineDepthBias: 0.1
     - _OutlineWidth: 0.005
     - _RimPower: 5
     - _ShadowStrength: 0.6
