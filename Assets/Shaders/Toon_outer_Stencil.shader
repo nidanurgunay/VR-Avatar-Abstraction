@@ -21,18 +21,18 @@ Shader "Custom/ToonShader_OuterInner_Stencil"
         _ShadowStrength ("Shadow Strength", Range(0, 1)) = 0.7
 
         // Outer outline (geometry-based)
-        _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.01
+        _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.005
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
 
         // Inner lines
         [Toggle] _EnableInnerLines ("Enable Inner Lines", Float) = 1
         _InnerLineColor ("Inner Line Color", Color) = (0,0,0,1)
-        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 0.5)) = 0.03
-        _InnerLineBlur ("Inner Line Sample Distance", Range(0.5, 10.0)) = 2.0
+        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 0.5)) = 0.2
+        _InnerLineBlur ("Inner Line Sample Distance", Range(0.0, 10.0)) = 0.5
         _InnerLineStrength ("Inner Line Strength", Range(0, 1)) = 1.0
 
         // Rim
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
+        _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
 
         // Ambient
@@ -40,7 +40,7 @@ Shader "Custom/ToonShader_OuterInner_Stencil"
         
         // Transparency
         [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
-        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.07
         [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
         
         // Debug
@@ -313,4 +313,5 @@ Shader "Custom/ToonShader_OuterInner_Stencil"
     }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
+    CustomEditor "ToonShaderEditor"
 }

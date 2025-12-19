@@ -17,7 +17,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         _ShadowStrength ("Shadow Strength", Range(0, 1)) = 0.7
 
         // Outer outline (geometry-based)
-        _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.01
+        _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.005
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
         [Toggle] _UseOutlineDepthOffset ("Use Depth Offset (fix z-fighting)", Float) = 0
         _OutlineDepthBias ("Outline Depth Bias", Range(0, 5)) = 1.0
@@ -25,12 +25,12 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         // Inner lines
         [Toggle] _EnableInnerLines ("Enable Inner Lines", Float) = 1
         _InnerLineColor ("Inner Line Color", Color) = (0,0,0,1)
-        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 0.5)) = 0.03
-        _InnerLineBlur ("Inner Line Sample Distance", Range(0.5, 10.0)) = 2.0
+        _InnerLineThreshold ("Inner Line Threshold", Range(0.001, 0.5)) = 0.2
+        _InnerLineBlur ("Inner Line Sample Distance", Range(0.0, 10.0)) = 0.5
         _InnerLineStrength ("Inner Line Strength", Range(0, 1)) = 1.0
 
         // Rim
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
+        _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
 
         // Ambient
@@ -38,8 +38,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         
         // Transparency
         [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
-        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
-        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.07
         
         // Debug
         [Toggle] _ShowTextureOnly ("Show Texture Only (Debug)", Float) = 0
@@ -47,21 +46,16 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
 
-        // OUTER OUTLINE PASS - Rendered by ToonOutlineRendererFeature
-        // Uses Cull Front + slight depth offset to prevent flickering
+        // OUTER OUTLINE PASS (Without Depth Offset)
         Pass
         {
-            Name "ToonOutline"
-            Tags { "LightMode"="ToonOutline" }
-            
+            Name "OuterOutline"
+            Tags { "Queue"="Geometry+1" } 
             Cull Front
             ZWrite On
-            ZTest LEqual
-            
-            // Small polygon offset to push outline slightly behind
-            Offset 1, 1
+            ZTest Less
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -109,8 +103,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
                 
                 // Apply depth bias in clip space if enabled
                 #if _USEOUTLINEDEPTHOFFSET_ON
-                    // Push outline away from camera (increase depth) to render behind mesh edges
-                    o.pos.z += _OutlineDepthBias * 0.001;
+                    o.pos.z -= _OutlineDepthBias * 0.0001; // Push toward camera in depth
                 #endif
                 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -135,7 +128,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            Cull [_CullMode]
+            Cull Back
             ZWrite On
             ZTest LEqual
 
@@ -458,5 +451,6 @@ if (_EnableInnerLines > 0.5)
     } // End SubShader
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
+    CustomEditor "ToonShaderEditor"
 }
 

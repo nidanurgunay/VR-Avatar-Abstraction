@@ -2,6 +2,8 @@ Shader "Custom/ToonShader"
 {
     Properties
     {
+        [Toggle] _UseDebugDefaults ("Use Debug Defaults", Float) = 0
+        
         _Color ("Main Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
         
@@ -15,26 +17,19 @@ Shader "Custom/ToonShader"
         _OutlineColor ("Outline Color", Color) = (0,0,0,1)
         
         // Rim light (for extra style)
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
+        _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
-        
-        // Transparency
-        [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
-        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
-        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
     }
     
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
         
-        // Outline Pass - Uses clip-space depth bias (simple approach)
+        // Outline Pass (rendered first)
         Pass
         {
             Name "Outline"
             Cull Front
-            ZWrite On
-            ZTest LEqual
             
             HLSLPROGRAM
             #pragma vertex vert
@@ -67,14 +62,6 @@ Shader "Custom/ToonShader"
                 float3 positionOS = input.positionOS.xyz + normalOS * _OutlineWidth;
                 
                 output.positionHCS = TransformObjectToHClip(positionOS);
-                
-                // Push outline slightly away from camera to prevent z-fighting
-                #if UNITY_REVERSED_Z
-                    output.positionHCS.z -= 0.0001 * output.positionHCS.w;
-                #else
-                    output.positionHCS.z += 0.0001 * output.positionHCS.w;
-                #endif
-                
                 return output;
             }
             
@@ -90,10 +77,6 @@ Shader "Custom/ToonShader"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            
-            Cull [_CullMode]
-            ZWrite On
-            ZTest LEqual
             
             HLSLPROGRAM
             #pragma vertex vert
@@ -190,4 +173,5 @@ Shader "Custom/ToonShader"
     }
     
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
+    CustomEditor "ToonShaderEditor"
 }

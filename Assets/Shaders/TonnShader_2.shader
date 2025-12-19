@@ -2,6 +2,8 @@ Shader "Custom/ToonShader_Improved"
 {
     Properties
     {
+        [Toggle] _UseDebugDefaults ("Use Debug Defaults", Float) = 0
+        
         _Color ("Main Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
         _ToonSteps ("Shading Steps", Range(1, 10)) = 3
@@ -13,7 +15,7 @@ Shader "Custom/ToonShader_Improved"
         _OutlineColor ("Outline Color", Color) = (0,0,0,1)
 
         // Rim
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
+        _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
 
         // Ambient (safer than hardcoding)
@@ -27,33 +29,17 @@ Shader "Custom/ToonShader_Improved"
         _SpecColor ("Specular Color", Color) = (1,1,1,1)
         _SpecThreshold ("Specular Threshold", Range(0,1)) = 0.9
         _SpecPower ("Specular Power", Range(1, 64)) = 16
-        
-        // Transparency
-        [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
-        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
-        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
 
-        // Outline Pass - Uses stencil to prevent z-fighting
+        // Outline Pass (world-space expansion)
         Pass
         {
-            Name "ToonOutline"
-            Tags { "LightMode"="ToonOutline" }
-            
+            Name "Outline"
             Cull Front
-            ZWrite On
-            ZTest LEqual
-            
-            Stencil
-            {
-                Ref 1
-                Comp NotEqual
-                Pass Keep
-            }
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -105,17 +91,6 @@ Shader "Custom/ToonShader_Improved"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            
-            Cull [_CullMode]
-            ZWrite On
-            ZTest LEqual
-            
-            Stencil
-            {
-                Ref 1
-                Comp Always
-                Pass Replace
-            }
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -237,4 +212,5 @@ Shader "Custom/ToonShader_Improved"
     }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
+    CustomEditor "ToonShaderEditor"
 }

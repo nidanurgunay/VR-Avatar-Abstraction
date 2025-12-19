@@ -11,8 +11,10 @@ Material:
   m_Shader: {fileID: 4800000, guid: cb684cc23d78649bf8b4497a0c6011c1, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords: []
-  m_InvalidKeywords: []
+  m_ValidKeywords:
+  - _USEOUTLINEDEPTHOFFSET_ON
+  m_InvalidKeywords:
+  - _ENABLEINNERLINES_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -88,6 +90,7 @@ Material:
     m_Floats:
     - _AddPrecomputedVelocity: 0
     - _AlphaClip: 0
+    - _AlphaCutoff: 0.5
     - _AlphaToMask: 0
     - _Alpha_Clip_Threshold: 1
     - _Blend: 0
@@ -102,12 +105,13 @@ Material:
     - _DstBlend: 0
     - _DstBlendAlpha: 0
     - _Edge_Strength: 0.5
+    - _EnableAlphaTest: 0
     - _EnableInnerLines: 1
     - _EnvironmentReflections: 1
     - _GlossMapScale: 0
     - _Glossiness: 0
     - _GlossyReflections: 0
-    - _InnerLineBlur: 2.0
+    - _InnerLineBlur: 2
     - _InnerLineStrength: 0.75
     - _InnerLineThreshold: 0.035
     - _Lighting_Steps: 3
@@ -116,6 +120,7 @@ Material:
     - _Metallic: 0
     - _OcclusionStrength: 1
     - _OuterOutlineWidth: 0.01
+    - _OutlineDepthBias: 4
     - _Parallax: 0.005
     - _QueueControl: 0
     - _QueueOffset: 0
@@ -135,6 +140,8 @@ Material:
     - _ToonSmoothness: 0.01
     - _ToonSteps: 3
     - _ToonThreshold: 0.289
+    - _UseDebugDefaults: 0
+    - _UseOutlineDepthOffset: 1
     - _WorkflowMode: 1
     - _ZWrite: 1
     m_Colors:

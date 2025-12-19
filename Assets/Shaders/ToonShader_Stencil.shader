@@ -6,6 +6,8 @@ Shader "Custom/ToonShader_Stencil"
 {
     Properties
     {
+        [Toggle] _UseDebugDefaults ("Use Debug Defaults", Float) = 0
+        
         [Header(Main Settings)]
         _Color ("Main Color", Color) = (1,1,1,1)
         _MainTex ("Texture", 2D) = "white" {}
@@ -18,12 +20,12 @@ Shader "Custom/ToonShader_Stencil"
         _ShadowStrength ("Shadow Strength", Range(0, 1)) = 0.7
 
         [Header(Outline)]
-        _OuterOutlineWidth ("Outline Width", Range(0, 0.5)) = 0.01
+        _OuterOutlineWidth ("Outline Width", Range(0, 0.5)) = 0.005
         _OuterOutlineColor ("Outline Color", Color) = (0,0,0,1)
         [Toggle] _ScreenSpaceOutline ("Screen-Space Width", Float) = 0
 
         [Header(Rim Light)]
-        _RimColor ("Rim Color", Color) = (1,1,1,1)
+        _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
 
         [Header(Ambient)]
@@ -31,7 +33,7 @@ Shader "Custom/ToonShader_Stencil"
         
         [Header(Transparency)]
         [Toggle] _EnableAlphaTest ("Enable Alpha Test", Float) = 0
-        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.07
         [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
     }
 
@@ -428,4 +430,5 @@ Shader "Custom/ToonShader_Stencil"
     }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
+    CustomEditor "ToonShaderEditor"
 }

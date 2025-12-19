@@ -15,7 +15,6 @@ Material:
   - _USEOUTLINEDEPTHOFFSET_ON
   m_InvalidKeywords:
   - _ENABLEINNERLINES_ON
-  - _USEDEBUGDEFAULTS_ON
   - _USETEXTUREEDGES_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -42,7 +41,8 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AlphaCutoff: 0.5
+    - _AlphaCutoff: 0.07
+    - _CullMode: 2
     - _DebugInnerLines: 0
     - _DebugRawEdges: 0
     - _EnableAlphaTest: 0
@@ -50,13 +50,13 @@ Material:
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.2
+    - _InnerLineThreshold: 0.17
     - _InnerLineWidth: 2
     - _LineMapStrength: 1
     - _OuterOutlineWidth: 0.005
-    - _OutlineDepthBias: 0.1
+    - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
-    - _RimPower: 4.76
+    - _RimPower: 4
     - _ShadowStrength: 0.6
     - _ShowTextureOnly: 0
     - _SpecPower: 16
@@ -65,9 +65,9 @@ Material:
     - _TextureEdgeThreshold: 0.05
     - _TextureIntensity: 1
     - _ToonSmoothness: 0.03
-    - _ToonSteps: 10
-    - _ToonThreshold: 1
-    - _UseDebugDefaults: 1
+    - _ToonSteps: 4
+    - _ToonThreshold: 0.4
+    - _UseDebugDefaults: 0
     - _UseOutlineDepthOffset: 1
     - _UseRamp: 0
     - _UseTextureEdges: 1
@@ -77,7 +77,7 @@ Material:
     - _InnerLineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _RimColor: {r: 0.408, g: 0.408, b: 0.408, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
