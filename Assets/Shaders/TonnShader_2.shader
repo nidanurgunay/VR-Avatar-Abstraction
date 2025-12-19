@@ -27,17 +27,33 @@ Shader "Custom/ToonShader_Improved"
         _SpecColor ("Specular Color", Color) = (1,1,1,1)
         _SpecThreshold ("Specular Threshold", Range(0,1)) = 0.9
         _SpecPower ("Specular Power", Range(1, 64)) = 16
+        
+        // Transparency
+        [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // Outline Pass (world-space expansion)
+        // Outline Pass - Uses stencil to prevent z-fighting
         Pass
         {
-            Name "Outline"
+            Name "ToonOutline"
+            Tags { "LightMode"="ToonOutline" }
+            
             Cull Front
+            ZWrite On
+            ZTest LEqual
+            
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -89,6 +105,17 @@ Shader "Custom/ToonShader_Improved"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
+            
+            Cull [_CullMode]
+            ZWrite On
+            ZTest LEqual
+            
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
 
             HLSLPROGRAM
             #pragma vertex vert

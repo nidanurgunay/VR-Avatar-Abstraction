@@ -39,6 +39,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         // Transparency
         [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
         _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
         
         // Debug
         [Toggle] _ShowTextureOnly ("Show Texture Only (Debug)", Float) = 0
@@ -46,16 +47,26 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS (Without Depth Offset)
+        // OUTER OUTLINE PASS - Uses stencil to prevent z-fighting
+        // Rendered by ToonOutlineRendererFeature AFTER the main pass
         Pass
         {
-            Name "OuterOutline"
-            Tags { "Queue"="Geometry+1" } 
+            Name "ToonOutline"
+            Tags { "LightMode"="ToonOutline" }
+            
             Cull Front
             ZWrite On
-            ZTest Less
+            ZTest LEqual
+            
+            // STENCIL: Only draw where stencil is NOT 1 (outside the mesh)
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -103,7 +114,8 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
                 
                 // Apply depth bias in clip space if enabled
                 #if _USEOUTLINEDEPTHOFFSET_ON
-                    o.pos.z -= _OutlineDepthBias * 0.0001; // Push toward camera in depth
+                    // Push outline away from camera (increase depth) to render behind mesh edges
+                    o.pos.z += _OutlineDepthBias * 0.001;
                 #endif
                 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -128,9 +140,17 @@ Shader "Custom/ToonShader_OuterInner_Fixed"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            Cull Back
+            Cull [_CullMode]
             ZWrite On
             ZTest LEqual
+            
+            // STENCIL: Write 1 to mark where main mesh is rendered
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
 
             HLSLPROGRAM
             #pragma vertex vert

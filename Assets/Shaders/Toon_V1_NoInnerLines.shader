@@ -35,20 +35,20 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
         // Transparency
         [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
         _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS
+        // OUTER OUTLINE PASS - Uses clip-space depth bias (simple approach)
         Pass
         {
             Name "OuterOutline"
-            Tags { "Queue"="Geometry+1" } 
             Cull Front
             ZWrite On
-            ZTest Less
+            ZTest LEqual
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -88,9 +88,16 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
                 float3 posWS = positionInputs.positionWS + normalInputs.normalWS * _OuterOutlineWidth;
                 o.pos = TransformWorldToHClip(posWS);
                 
-                // Apply depth bias in clip space if enabled
+                // Always apply small depth bias to reduce z-fighting
+                #if UNITY_REVERSED_Z
+                    o.pos.z -= 0.0001 * o.pos.w;
+                #else
+                    o.pos.z += 0.0001 * o.pos.w;
+                #endif
+                
+                // Apply additional depth bias if enabled
                 #if _USEOUTLINEDEPTHOFFSET_ON
-                    o.pos.z -= _OutlineDepthBias * 0.0001; // Push toward camera in depth
+                    o.pos.z += _OutlineDepthBias * 0.001;
                 #endif
                 
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
@@ -114,7 +121,7 @@ Shader "Custom/ToonShader_V1_NoInnerLines"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            Cull Back
+            Cull [_CullMode]
             ZWrite On
             ZTest LEqual
 

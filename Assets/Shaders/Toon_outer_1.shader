@@ -31,23 +31,35 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
         // Ambient
         _AmbientColor ("Ambient Color", Color) = (0.3,0.3,0.3,1)
         
+        // Transparency
+        [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
+        _AlphaCutoff ("Alpha Cutoff", Range(0, 1)) = 0.5
+        [Enum(Off,0,Front,1,Back,2)] _CullMode ("Cull Mode (Off = Two-Sided)", Float) = 2
+        
         // Debug
         [Toggle] _ShowTextureOnly ("Show Texture Only (Debug)", Float) = 0
     }
 
     SubShader
     {
-        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" }
+        Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS
+        // OUTER OUTLINE PASS - Uses stencil to prevent z-fighting
         Pass
         {
-            Name "OuterOutline"
-            Tags { "Queue"="Geometry+1" } 
+            Name "ToonOutline"
+            Tags { "LightMode"="ToonOutline" }
+            
             Cull Front
-            ZWrite Off
+            ZWrite On
             ZTest LEqual
-            Blend Off
+            
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -92,6 +104,14 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
                 // Apply offset in clip space (before perspective divide)
                 clipPos.xy += offset;
                 
+                // Push outline slightly away from camera in NDC space to prevent z-fighting
+                // This is a small constant bias that works across all depth ranges
+                #if UNITY_REVERSED_Z
+                    clipPos.z -= 0.0001 * clipPos.w;  // Reversed Z (most platforms)
+                #else
+                    clipPos.z += 0.0001 * clipPos.w;  // Standard Z
+                #endif
+                
                 o.pos = clipPos;
                 return o;
             }
@@ -108,9 +128,16 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
         {
             Name "ForwardLit"
             Tags { "LightMode"="UniversalForward" }
-            Cull Back
+            Cull [_CullMode]
             ZWrite On
             ZTest LEqual
+            
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
 
             HLSLPROGRAM
             #pragma vertex vert
