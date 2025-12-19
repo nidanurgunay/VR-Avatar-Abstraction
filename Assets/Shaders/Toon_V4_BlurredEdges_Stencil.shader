@@ -1,7 +1,8 @@
-// Version 4: Pre-Blurred Sobel (Final Version)
-// This version adds Gaussian blur before edge detection to reduce artifacts
+// STENCIL VERSION - Works with Forward Rendering only
+// Version 4: Pre-Blurred Sobel with stencil-based outline masking
+// NOTE: Does NOT work with Deferred Rendering - use non-stencil version instead
 
-Shader "Custom/ToonShader_V4_BlurredEdges"
+Shader "Custom/ToonShader_V4_BlurredEdges_Stencil"
 {
     Properties
     {
@@ -20,8 +21,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
 
         _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.01
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
-        [Toggle] _UseOutlineDepthOffset ("Use Depth Offset (fix z-fighting)", Float) = 0
-        _OutlineDepthBias ("Outline Depth Bias", Range(0, 5)) = 1.0
 
         [Toggle] _EnableInnerLines ("Enable Inner Lines", Float) = 1
         _InnerLineColor ("Inner Line Color", Color) = (0,0,0,1)
@@ -43,7 +42,7 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
     {
         Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS - Uses depth offset to prevent z-fighting
+        // OUTLINE PASS with STENCIL masking
         Pass
         {
             Name "ToonOutline"
@@ -53,13 +52,17 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
             ZWrite On
             ZTest LEqual
             
-            // Polygon offset to push outline behind mesh edges
-            Offset 1, 1
+            // STENCIL: Only draw where stencil is NOT 1
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
             #pragma vertex vert_outline
             #pragma fragment frag_outline
-            #pragma shader_feature_local _USEOUTLINEDEPTHOFFSET_ON
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct appdata_outline { float4 vertex : POSITION; float3 normal : NORMAL; float2 uv : TEXCOORD0; };
@@ -72,7 +75,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
             float4 _OuterOutlineColor;
             float _EnableAlphaTest;
             float _AlphaCutoff;
-            float _OutlineDepthBias;
 
             v2f_outline vert_outline(appdata_outline v)
             {
@@ -80,13 +82,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                 VertexPositionInputs posInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normInputs = GetVertexNormalInputs(v.normal);
                 o.pos = TransformWorldToHClip(posInputs.positionWS + normInputs.normalWS * _OuterOutlineWidth);
-                
-                // Apply depth bias in clip space if enabled
-                #if _USEOUTLINEDEPTHOFFSET_ON
-                    // Push outline away from camera (increase depth) to render behind mesh edges
-                    o.pos.z += _OutlineDepthBias * 0.001;
-                #endif
-                
                 o.uv = TRANSFORM_TEX(v.uv, _MainTex);
                 return o;
             }
@@ -102,6 +97,7 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
             ENDHLSL
         }
 
+        // MAIN PASS with STENCIL write
         Pass
         {
             Name "ForwardLit"
@@ -110,6 +106,14 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
             Cull [_CullMode]
             ZWrite On
             ZTest LEqual
+            
+            // STENCIL: Write 1 to mark mesh pixels
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -143,7 +147,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
 
             half4 frag(v2f IN) : SV_Target
             {
-                // Debug mode: override with default values
                 if (_UseDebugDefaults > 0.5)
                 {
                     _TextureIntensity = 1.0;
@@ -158,7 +161,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                 
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
                 
-                // Alpha test - discard transparent pixels (for eyelashes, if enabled)
                 if (_EnableAlphaTest > 0.5)
                 {
                     clip(texColor.a - _AlphaCutoff);
@@ -167,18 +169,16 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                 half3 baseColor = lerp(_Color.rgb, texColor.rgb * _Color.rgb, _TextureIntensity);
                 half4 albedo = half4(baseColor, texColor.a * _Color.a);
                 
-                // DETECT EDGES ON RAW TEXTURE BEFORE LIGHTING (better results)
+                // DETECT EDGES ON RAW TEXTURE BEFORE LIGHTING
                 float edgeStrength = 0.0;
                 if (_EnableInnerLines > 0.5)
                 {
                     float offset = _InnerLineBlur * 0.001;
-                    float blurOffset = offset * 1.2; // Maximum blur radius for extreme noise removal
+                    float blurOffset = offset * 1.2;
                     
-                    // 9-tap Gaussian blur applied to each Sobel sample position
-                    // This pre-filters noise before edge detection
                     float tl = 0.0, t = 0.0, tr = 0.0, l = 0.0, c = 0.0, r = 0.0, bl = 0.0, b = 0.0, br = 0.0;
                     
-                    // Top-left corner with blur
+                    // Top-left with blur
                     float2 uv_tl = IN.uv + float2(-offset, offset);
                     tl += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_tl).rgb, float3(0.299, 0.587, 0.114)) * 0.25;
                     tl += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_tl + float2(blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
@@ -202,7 +202,7 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                     t += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_t + float2(blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
                     t += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_t + float2(-blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
                     
-                    // Top-right corner with blur
+                    // Top-right with blur
                     float2 uv_tr = IN.uv + float2(offset, offset);
                     tr += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_tr).rgb, float3(0.299, 0.587, 0.114)) * 0.25;
                     tr += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_tr + float2(blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114)) * 0.125;
@@ -274,25 +274,23 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                     br += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_br + float2(blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
                     br += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, uv_br + float2(-blurOffset, -blurOffset)).rgb, float3(0.299, 0.587, 0.114)) * 0.0625;
                     
-                    // Sobel operator on pre-blurred values
+                    // Sobel operator
                     float sobelX = (tr + 2.0 * r + br) - (tl + 2.0 * l + bl);
                     float sobelY = (tl + 2.0 * t + tr) - (bl + 2.0 * b + br);
                     float edgeMagnitude = sqrt(sobelX * sobelX + sobelY * sobelY);
                     
-                    // MAXIMUM noise filtering - only shows the absolute strongest edges
-                    // Extremely high minEdge to reject nearly all texture variations
-                    float minEdge = _InnerLineThreshold * 0.85; // Very high cutoff (was 0.7)
-                    float maxEdge = _InnerLineThreshold * 1.15; // Very narrow acceptance window (was 1.2)
+                    float minEdge = _InnerLineThreshold * 0.85;
+                    float maxEdge = _InnerLineThreshold * 1.15;
                     float edge = smoothstep(minEdge, maxEdge, edgeMagnitude);
-                    edge = smoothstep(0.47, 0.53, edge); // Extremely tight range (was 0.45-0.55)
-                    edge = smoothstep(0.35, 0.65, edge); // Third smoothstep
-                    edge = smoothstep(0.25, 0.75, edge); // Fourth smoothstep for ultra-gradual transition
-                    edge = pow(edge, 3.0); // Maximum suppression (was 2.5, now 3.0)
+                    edge = smoothstep(0.47, 0.53, edge);
+                    edge = smoothstep(0.35, 0.65, edge);
+                    edge = smoothstep(0.25, 0.75, edge);
+                    edge = pow(edge, 3.0);
                     
                     edgeStrength = edge * _InnerLineStrength;
                 }
                 
-                // NOW calculate lighting (edges detected on raw texture, independent of shadows)
+                // Calculate lighting
                 float3 nWS = normalize(IN.nWS);
                 float3 vWS = normalize(_WorldSpaceCameraPos - IN.posWS);
                 Light mainLight = GetMainLight();
@@ -305,7 +303,6 @@ Shader "Custom/ToonShader_V4_BlurredEdges"
                 float rim = pow(1.0 - saturate(dot(vWS, nWS)), _RimPower);
                 float3 shaded = albedo.rgb * lighting + rim * _RimColor.rgb;
                 
-                // Apply detected edges to final lit result
                 shaded = lerp(shaded, _InnerLineColor.rgb, edgeStrength);
                 
                 return half4(shaded, albedo.a);

@@ -28,7 +28,6 @@ Material:
   - _USEOUTLINEDEPTHOFFSET_ON
   m_InvalidKeywords:
   - _ENABLEINNERLINES_ON
-  - _USEDEBUGDEFAULTS_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
@@ -134,13 +133,13 @@ Material:
     - _LineMapStrength: 1
     - _Metallic: 0
     - _OcclusionStrength: 1
-    - _OuterOutlineWidth: 0.005
+    - _OuterOutlineWidth: 0.002
     - _OutlineDepthBias: 0.1
     - _Parallax: 0.005
     - _QueueOffset: 0
     - _ReceiveShadows: 1
     - _RimPower: 8
-    - _ShadowStrength: 0.757
+    - _ShadowStrength: 0.581
     - _ShowTextureOnly: 0
     - _Smoothness: 0.5
     - _SmoothnessTextureChannel: 0
@@ -149,10 +148,10 @@ Material:
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _TextureIntensity: 1
-    - _ToonSmoothness: 0.0128
-    - _ToonSteps: 2.59
-    - _ToonThreshold: 0.18
-    - _UseDebugDefaults: 1
+    - _ToonSmoothness: 0.0314
+    - _ToonSteps: 3.82
+    - _ToonThreshold: 0
+    - _UseDebugDefaults: 0
     - _UseOutlineDepthOffset: 1
     - _WorkflowMode: 1
     - _ZWrite: 1

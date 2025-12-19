@@ -1,4 +1,8 @@
-Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
+// STENCIL VERSION - Works with Forward Rendering only
+// Screen-space outline width variant with stencil masking
+// NOTE: Does NOT work with Deferred Rendering - use non-stencil version instead
+
+Shader "Custom/ToonShader_OuterInner_Backup_Stencil"
 {
     Properties
     {
@@ -44,7 +48,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
     {
         Tags { "RenderType"="Opaque" "RenderPipeline"="UniversalPipeline" "Queue"="Geometry" }
 
-        // OUTER OUTLINE PASS - Uses depth offset to prevent z-fighting
+        // OUTER OUTLINE PASS - Uses stencil to prevent z-fighting
         Pass
         {
             Name "ToonOutline"
@@ -54,8 +58,13 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             ZWrite On
             ZTest LEqual
             
-            // Polygon offset to push outline behind mesh edges
-            Offset 1, 1
+            // STENCIL: Only draw where stencil is NOT 1
+            Stencil
+            {
+                Ref 1
+                Comp NotEqual
+                Pass Keep
+            }
 
             HLSLPROGRAM
             #pragma vertex vert_outline
@@ -82,31 +91,14 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             {
                 v2f_outline o;
 
-                // Get clip space position first
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(v.normal);
                 
-                // Transform normal to clip space
+                // Screen-space consistent outline
                 float3 clipNormal = TransformWorldToHClipDir(normalInputs.normalWS);
-                
-                // Get clip position
                 float4 clipPos = TransformWorldToHClip(positionInputs.positionWS);
-                
-                // Calculate screen-space consistent outline width
-                // Multiply by clipPos.w to compensate for perspective divide
-                // This keeps the outline the same screen-space thickness regardless of distance
                 float2 offset = normalize(clipNormal.xy) * _OuterOutlineWidth * clipPos.w * 0.1;
-                
-                // Apply offset in clip space (before perspective divide)
                 clipPos.xy += offset;
-                
-                // Push outline slightly away from camera in NDC space to prevent z-fighting
-                // This is a small constant bias that works across all depth ranges
-                #if UNITY_REVERSED_Z
-                    clipPos.z -= 0.0001 * clipPos.w;  // Reversed Z (most platforms)
-                #else
-                    clipPos.z += 0.0001 * clipPos.w;  // Standard Z
-                #endif
                 
                 o.pos = clipPos;
                 return o;
@@ -119,7 +111,7 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             ENDHLSL
         }
 
-        // MAIN TOON PASS (includes inner-line detection)
+        // MAIN TOON PASS
         Pass
         {
             Name "ForwardLit"
@@ -127,6 +119,14 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             Cull [_CullMode]
             ZWrite On
             ZTest LEqual
+            
+            // STENCIL: Write 1 to mark mesh pixels
+            Stencil
+            {
+                Ref 1
+                Comp Always
+                Pass Replace
+            }
 
             HLSLPROGRAM
             #pragma vertex vert
@@ -178,7 +178,6 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
             v2f vert(appdata v)
             {
                 v2f o;
-                // World-space pos and normal using URP functions
                 VertexPositionInputs positionInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normalInputs = GetVertexNormalInputs(v.normal);
 
@@ -189,10 +188,8 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
                 return o;
             }
 
-            // Helper to sample the main directional light using URP functions
             static inline void GetDirectionalLight(out float3 dir, out float3 color)
             {
-                // Get main light from URP
                 Light mainLight = GetMainLight();
                 dir = mainLight.direction;
                 color = mainLight.color;
@@ -200,96 +197,75 @@ Shader "Custom/ToonShader_OuterInner_Fixed_Backup"
 
             half4 frag(v2f IN) : SV_Target
             {
-                // Sample albedo
                 half4 texColor = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv);
-                // Blend texture with color, controlled by texture intensity
                 half3 baseColor = lerp(_Color.rgb, texColor.rgb * _Color.rgb, _TextureIntensity);
                 half4 albedo = half4(baseColor, texColor.a * _Color.a);
                 
-                // Debug mode: show texture only
                 if (_ShowTextureOnly > 0.5)
                 {
                     return albedo;
                 }
 
-                // Normals and view dir
                 float3 nWS = normalize(IN.nWS);
                 float3 vWS = normalize(_WorldSpaceCameraPos - IN.posWS);
 
-                // Main directional light
                 float3 lightDir;
                 float3 lightColor;
                 GetDirectionalLight(lightDir, lightColor);
-                // Ensure lightDir points from surface toward light (legacy _WorldSpaceLightPos0 is that already)
                 float NdotL = saturate(dot(nWS, lightDir));
 
-                // Toon quantization: smooth the threshold area a little, then quantize into steps
                 float smooth = smoothstep(_ToonThreshold - _ToonSmoothness, _ToonThreshold + _ToonSmoothness, NdotL);
                 float steps = max(1.0, _ToonSteps);
                 float toon = floor(smooth * steps) / steps;
-
-                // Apply shadow strength to make shadows more visible
                 toon = lerp(1.0, toon, _ShadowStrength);
                 
                 float3 lighting = lightColor * toon + _AmbientColor.rgb;
 
-                // Rim (Fresnel-like)
                 float rim = 1.0 - saturate(dot(vWS, nWS));
                 rim = pow(rim, _RimPower);
                 float3 rimLighting = rim * _RimColor.rgb;
 
                 float3 shaded = albedo.rgb * lighting + rimLighting;
 
-                // -------- INNER-LINE DETECTION (Based on Texture Only) --------
+                // Inner line detection
                 if (_EnableInnerLines > 0.5)
                 {
-                    // Get the base texture luminance (before lighting to avoid shadow artifacts)
                     float texLum = dot(texColor.rgb, float3(0.299, 0.587, 0.114));
                     
-                    // Apply blur/softening by averaging with nearby samples
                     float blurOffset = _InnerLineBlur * length(fwidth(IN.uv));
                     float texLumBlurred = texLum;
                     if (_InnerLineBlur > 0.01)
                     {
-                        // Simple 4-tap blur pattern
                         texLumBlurred += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114));
                         texLumBlurred += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(-blurOffset, 0)).rgb, float3(0.299, 0.587, 0.114));
                         texLumBlurred += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, blurOffset)).rgb, float3(0.299, 0.587, 0.114));
                         texLumBlurred += dot(SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, IN.uv + float2(0, -blurOffset)).rgb, float3(0.299, 0.587, 0.114));
-                        texLumBlurred /= 5.0; // Average of 5 samples
+                        texLumBlurred /= 5.0;
                     }
                     
-                    // Get gradients from BLURRED texture (smoother, more connected lines)
                     float2 texGrad = float2(ddx(texLumBlurred), ddy(texLumBlurred));
                     float gradMag = length(texGrad);
                     
-                    // Normalize by UV space to make zoom-independent
                     float uvScale = length(fwidth(IN.uv));
                     uvScale = max(uvScale, 0.0001);
                     float normalizedGrad = gradMag / uvScale;
                     
-                    // Apply width multiplier to make lines thicker/thinner
                     normalizedGrad *= _InnerLineWidth;
                     
-                    // Enhanced edge detection with wider smooth range for better connectivity
                     float smoothRange = _InnerLineSmooth * 2.0;
                     float edge = smoothstep(_InnerLineThreshold - smoothRange, _InnerLineThreshold + smoothRange, normalizedGrad);
                     
-                    // Use a lower power to expand the lines and connect gaps
                     float innerEdge = pow(edge, 0.5);
-                    
-                    // Additional step: strengthen edges that are already visible
                     innerEdge = smoothstep(0.2, 0.8, innerEdge);
                     
-                    // Mix inner line color
                     shaded = lerp(shaded, _InnerLineColor.rgb, innerEdge);
                 }
 
                 return half4(shaded, albedo.a);
             }
             ENDHLSL
-        } // End main pass
-    } // End SubShader
+        }
+    }
 
     FallBack "Hidden/Universal Render Pipeline/FallbackError"
 }
