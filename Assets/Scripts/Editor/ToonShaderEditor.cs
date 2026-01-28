@@ -51,10 +51,10 @@ public class ToonShaderEditor : ShaderGUI
     public override void OnGUI(MaterialEditor materialEditor, MaterialProperty[] properties)
     {
         Material material = materialEditor.target as Material;
-        
+
         // Find the debug toggle property
         MaterialProperty useDebugDefaults = FindProperty("_UseDebugDefaults", properties, false);
-        
+
         // Draw the debug toggle prominently at the top with immediate action
         if (useDebugDefaults != null)
         {
@@ -65,7 +65,6 @@ public class ToonShaderEditor : ShaderGUI
             if (EditorGUI.EndChangeCheck())
             {
                 useDebugDefaults.floatValue = newDebugValue ? 1.0f : 0.0f;
-                // Apply defaults immediately when toggled ON
                 if (newDebugValue && !currentValue)
                 {
                     ApplyDefaultValues(material, properties);
@@ -74,10 +73,23 @@ public class ToonShaderEditor : ShaderGUI
             }
             EditorGUILayout.Space(5);
         }
-        
-        // Draw the default inspector
-        base.OnGUI(materialEditor, properties);
-        
+
+        // Check for V9 filtering presets and handle mutual exclusivity
+        MaterialProperty lightFilter = FindProperty("_UseLightFiltering", properties, false);
+        MaterialProperty moderateFilter = FindProperty("_UseModerateFiltering", properties, false);
+        MaterialProperty aggressiveFilter = FindProperty("_UseAggressiveFiltering", properties, false);
+
+        if (lightFilter != null && moderateFilter != null && aggressiveFilter != null)
+        {
+            // Draw V9 shader with custom handling for mutually exclusive presets
+            DrawV9ShaderGUI(materialEditor, properties, lightFilter, moderateFilter, aggressiveFilter);
+        }
+        else
+        {
+            // Draw default inspector for non-V9 shaders
+            base.OnGUI(materialEditor, properties);
+        }
+
         // Add a button to manually apply defaults
         EditorGUILayout.Space(10);
         if (GUILayout.Button("Apply Optimal Defaults", GUILayout.Height(30)))
@@ -85,7 +97,7 @@ public class ToonShaderEditor : ShaderGUI
             ApplyDefaultValues(material, properties);
             Debug.Log("[ToonShader] Manually applied default values to material: " + material.name);
         }
-        
+
         // Show current values summary
         EditorGUILayout.Space(5);
         EditorGUILayout.HelpBox(
@@ -96,6 +108,92 @@ public class ToonShaderEditor : ShaderGUI
             "• Rim Power: 4.0",
             MessageType.Info
         );
+    }
+
+    private void DrawV9ShaderGUI(MaterialEditor materialEditor, MaterialProperty[] properties,
+        MaterialProperty lightFilter, MaterialProperty moderateFilter, MaterialProperty aggressiveFilter)
+    {
+        // Draw all properties except filtering presets first
+        foreach (var prop in properties)
+        {
+            if (prop.name == "_UseLightFiltering" ||
+                prop.name == "_UseModerateFiltering" ||
+                prop.name == "_UseAggressiveFiltering")
+                continue;
+
+            if ((prop.flags & MaterialProperty.PropFlags.HideInInspector) == 0)
+            {
+                materialEditor.ShaderProperty(prop, prop.displayName);
+            }
+        }
+
+        // Draw filtering presets with mutual exclusivity
+        EditorGUILayout.Space(10);
+        EditorGUILayout.LabelField("Filtering Presets (select one)", EditorStyles.boldLabel);
+
+        bool lightOn = lightFilter.floatValue > 0.5f;
+        bool moderateOn = moderateFilter.floatValue > 0.5f;
+        bool aggressiveOn = aggressiveFilter.floatValue > 0.5f;
+
+        // Light Filtering toggle
+        EditorGUI.BeginChangeCheck();
+        bool newLightOn = EditorGUILayout.Toggle("Light Filtering (V3 style)", lightOn);
+        if (EditorGUI.EndChangeCheck() && newLightOn && !lightOn)
+        {
+            lightFilter.floatValue = 1.0f;
+            moderateFilter.floatValue = 0.0f;
+            aggressiveFilter.floatValue = 0.0f;
+            ApplyFilteringPreset(properties, 0.8f, 0.25f, 0.125f, 0.0625f, 0.2f, 2.0f, 2f, 0.2f, 1.5f);
+        }
+        else if (EditorGUI.EndChangeCheck() && !newLightOn && lightOn)
+        {
+            lightFilter.floatValue = 0.0f;
+        }
+
+        // Moderate Filtering toggle
+        EditorGUI.BeginChangeCheck();
+        bool newModerateOn = EditorGUILayout.Toggle("Moderate Filtering (V4 style)", moderateOn);
+        if (EditorGUI.EndChangeCheck() && newModerateOn && !moderateOn)
+        {
+            lightFilter.floatValue = 0.0f;
+            moderateFilter.floatValue = 1.0f;
+            aggressiveFilter.floatValue = 0.0f;
+            ApplyFilteringPreset(properties, 1.0f, 0.3f, 0.12f, 0.05f, 0.4f, 1.6f, 3f, 0.3f, 2.0f);
+        }
+        else if (EditorGUI.EndChangeCheck() && !newModerateOn && moderateOn)
+        {
+            moderateFilter.floatValue = 0.0f;
+        }
+
+        // Aggressive Filtering toggle
+        EditorGUI.BeginChangeCheck();
+        bool newAggressiveOn = EditorGUILayout.Toggle("Aggressive Filtering (V5 style)", aggressiveOn);
+        if (EditorGUI.EndChangeCheck() && newAggressiveOn && !aggressiveOn)
+        {
+            lightFilter.floatValue = 0.0f;
+            moderateFilter.floatValue = 0.0f;
+            aggressiveFilter.floatValue = 1.0f;
+            ApplyFilteringPreset(properties, 1.2f, 0.25f, 0.125f, 0.0625f, 0.85f, 1.15f, 4f, 1.0f, 3.0f);
+        }
+        else if (EditorGUI.EndChangeCheck() && !newAggressiveOn && aggressiveOn)
+        {
+            aggressiveFilter.floatValue = 0.0f;
+        }
+    }
+
+    private void ApplyFilteringPreset(MaterialProperty[] properties, float blurRadius, float centerWeight,
+        float cardinalWeight, float diagonalWeight, float threshMin, float threshMax,
+        float smoothPasses, float smoothTightness, float powerCurve)
+    {
+        SetPropertyIfExists(properties, "_BlurRadiusMultiplier", blurRadius);
+        SetPropertyIfExists(properties, "_GaussianCenterWeight", centerWeight);
+        SetPropertyIfExists(properties, "_GaussianCardinalWeight", cardinalWeight);
+        SetPropertyIfExists(properties, "_GaussianDiagonalWeight", diagonalWeight);
+        SetPropertyIfExists(properties, "_ThresholdMinMultiplier", threshMin);
+        SetPropertyIfExists(properties, "_ThresholdMaxMultiplier", threshMax);
+        SetPropertyIfExists(properties, "_SmoothstepPasses", smoothPasses);
+        SetPropertyIfExists(properties, "_SmoothstepTightness", smoothTightness);
+        SetPropertyIfExists(properties, "_PowerCurve", powerCurve);
     }
     
     private void ApplyDefaultValues(Material material, MaterialProperty[] properties)

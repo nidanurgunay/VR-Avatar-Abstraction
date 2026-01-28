@@ -31,7 +31,7 @@ Shader "Custom/ToonShader_V2_SimpleSobel"
 
         _RimColor ("Rim Color", Color) = (0.408,0.408,0.408,1)
         _RimPower ("Rim Power", Range(0.1, 8.0)) = 3.0
-        _AmbientColor ("Ambient Color", Color) = (0.3,0.3,0.3,1)
+        _AmbientColor ("Ambient Color", Color) = (0.35,0.35,0.35,1)
         
         // Transparency
         [Toggle] _EnableAlphaTest ("Enable Alpha Test (for eyelashes)", Float) = 0
