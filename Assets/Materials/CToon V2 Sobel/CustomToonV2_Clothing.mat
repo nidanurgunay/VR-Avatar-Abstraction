@@ -41,7 +41,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _AlphaCutoff: 0.252
+    - _AlphaCutoff: 0.07
     - _CullMode: 2
     - _DebugInnerLines: 0
     - _DebugRawEdges: 0
@@ -53,10 +53,10 @@ Material:
     - _InnerLineThreshold: 0.2
     - _InnerLineWidth: 2.16
     - _LineMapStrength: 1
-    - _OuterOutlineWidth: 0.019
+    - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
-    - _RimPower: 2.42
+    - _RimPower: 4
     - _ShadowStrength: 0.6
     - _ShowTextureOnly: 0
     - _SpecPower: 16

@@ -30,7 +30,7 @@ Material:
   m_InvalidKeywords:
   - _ALPHATEST_ON
   - _ENABLEINNERLINES_ON
-  - _ENABLETEXTURESOBEL_ON
+  - _ENABLENORMALEDGES_ON
   - _NORMALMAP
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -124,8 +124,9 @@ Material:
     - _EnableAlphaTest: 0
     - _EnableFresnelEdge: 0
     - _EnableInnerLines: 1
-    - _EnableNormalEdges: 0
-    - _EnableTextureSobel: 1
+    - _EnableNormalEdges: 1
+    - _EnableOuterOutline: 0
+    - _EnableTextureSobel: 0
     - _EnvironmentReflections: 1
     - _FresnelEdgeStrength: 0.3
     - _FresnelEdgeThreshold: 0.3
@@ -138,9 +139,9 @@ Material:
     - _LineMapStrength: 1
     - _Metallic: 0
     - _Mode: 3
-    - _NormalEdgeSmoothness: 0.1
-    - _NormalEdgeStrength: 0.5
-    - _NormalEdgeThreshold: 0.5
+    - _NormalEdgeSmoothness: 0.01
+    - _NormalEdgeStrength: 1
+    - _NormalEdgeThreshold: 0.1
     - _OcclusionStrength: 1
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4

@@ -1,123 +1,105 @@
-# Avatar Shader Experimental Project
+# Abstracting Realistic VR Avatars Using Toon Shading and Edge Detection
 
-This Unity project features the Jade character avatar with custom shaders and animation support.
+A Unity URP project implementing and comparing four non-photorealistic rendering (NPR) techniques for VR avatar stylisation. Developed as part of a practical research study evaluating toon shading and edge detection approaches for real-time use.
 
-## Project Overview
+📄 **Full report**: `NidanurGunay_Project_Report.pdf`
 
-This project demonstrates:
-- Custom toon/cel shading effects
-- Character animation system
-- XR/VR integration capabilities
-- Humanoid character rigging with Mixamo
+---
 
-## Character Setup
+## Overview
 
-### Avatar: Jade
-- **Location**: `Assets/Characters/Jade.fbx`
-- **Rig Type**: Humanoid (Mixamo rig)
-- **Features**: Fully rigged character with support for standard humanoid animations
+Photorealistic VR avatars risk triggering the uncanny valley effect. This project explores toon/cel shading as an alternative, progressively introducing different edge detection methods to evaluate their suitability for VR avatar rendering.
 
-## Animation System
+Four shader versions are implemented and compared:
 
-The project now includes a complete animation setup for the Jade avatar:
+| Version | Shader | Technique |
+|---------|--------|-----------|
+| V1 | `Toon_V1_NoInnerLines` | Quantised toon shading + geometry-expansion silhouette outline |
+| V2 | `Toon_V7_Combined` | V1 + screen-space normal edge detection (ddx/ddy derivatives) |
+| V3 | `Toon_V2_SimpleSobel` | V1 + texture-based Sobel edge detection (raw, no pre-filtering) |
+| V4 | `Toon_V10_Ultimate` | V1 + Gaussian pre-filtered Sobel with multi-pass smoothstep sharpening |
 
-### Quick Start with Animations
+---
 
-1. **Animator Controller**: `Assets/Animations/JadeAnimatorController.controller`
-   - Pre-configured animator controller ready for animation clips
-   
-2. **Animation Folder**: `Assets/Animations/`
-   - Organized location for all animation clips
-   - Includes sample idle animation structure
+## Key Findings
 
-3. **Animation Controller Script**: `Assets/Scripts/SimpleAnimationController.cs`
-   - Simple script for controlling animations via keyboard
-   - Can be attached to the Jade character for testing
+- **Geometry outlines (V1)** provide stable, distance-independent silhouettes — best choice for VR
+- **Normal-based edges (V2)** produce distance-dependent artefacts, unsuitable for variable-distance VR scenarios
+- **Raw Sobel (V3)** detects internal texture features but is extremely parameter-sensitive (especially on facial regions)
+- **Gaussian-filtered Sobel (V4)** compresses artefacts at lower thresholds but does not clearly outperform well-tuned V3 — the primary effect is smoother inner lines at 81 texture samples/fragment vs V3's 9
 
-### Adding Animations from Mixamo
-
-Since Jade uses a Mixamo rig, you can easily add animations from [Mixamo.com](https://www.mixamo.com/):
-
-1. Download animations as **FBX for Unity** with **Without Skin** option
-2. Import FBX files into `Assets/Animations/MixamoAnimations/` folder
-3. Configure import settings:
-   - Rig → Animation Type: **Humanoid**
-   - Rig → Avatar Definition: **Copy From Other Avatar** → Source: Jade.fbx
-4. Add animation clips to the JadeAnimatorController
-5. Play in Unity!
-
-For detailed instructions, see: `Assets/Animations/README_ANIMATIONS.md`
-
-## Shaders
-
-The project includes custom toon shaders for a cel-shaded visual style.
-
-- **Shader Location**: `Assets/Shaders/`
-- **Materials**: `Assets/Materials/`
+---
 
 ## Project Structure
 
 ```
 Assets/
-├── Animations/          # Animation clips and animator controllers
-│   ├── JadeAnimatorController.controller
-│   ├── Idle.anim
-│   └── README_ANIMATIONS.md
-├── Characters/          # 3D character models
-│   └── Jade.fbx
-├── Materials/           # Material assets
-├── Scenes/             # Unity scenes
-│   └── SampleScene.unity
-├── Scripts/            # C# scripts
-│   └── SimpleAnimationController.cs
-├── Shaders/            # Custom shader files
-├── Textures/           # Texture assets
-└── Settings/           # Project settings
-
+├── Shaders/
+│   ├── Toon_V1_NoInnerLines.shader       # Report V1: Base toon + geometry outline
+│   ├── Toon_V2_SimpleSobel.shader        # Report V3: Raw Sobel inner lines
+│   ├── Toon_V7_Combined.shader           # Report V2: Normal-based edge detection
+│   ├── Toon_V10_Ultimate.shader          # Report V4: Gaussian pre-filtered Sobel
+│   └── *.shadergraph                     # Shader graph experiments
+├── Materials/
+│   ├── CToon V1 Toon only/               # V1 materials (body, hair, clothing, eyelash)
+│   ├── CToon V2 Sobel/                   # V3 materials
+│   ├── Ctoon V7 Combined/               # V2 materials
+│   ├── CToon V10/                        # V4 materials
+│   └── Original/                         # Unmodified PBR avatar materials
+├── Characters/
+│   └── Jade.fbx                          # Humanoid avatar (Mixamo rig)
+├── Scenes/
+│   └── Custom Shader.unity               # Main comparison scene
+└── Animations/                           # Idle animation + animator controller
 ```
 
-## Getting Started
+---
 
-1. Open the project in Unity (2022.3 or later recommended)
-2. Open the main scene: `Assets/Scenes/SampleScene.unity`
-3. Add the Jade character to your scene (drag from `Assets/Characters/Jade.fbx`)
-4. Add the `Animator` component to Jade
-5. Assign `JadeAnimatorController` to the Animator's Controller field
-6. (Optional) Add `SimpleAnimationController` script for keyboard controls
-7. Import animations from Mixamo following the guide in `Assets/Animations/README_ANIMATIONS.md`
+## Setup
 
-## Features
+**Requirements:** Unity 2022.3 LTS or later, Universal Render Pipeline (URP)
 
-### Animation System
-- ✅ Humanoid avatar rig (Mixamo compatible)
-- ✅ Animator controller setup
-- ✅ Sample animation structure
-- ✅ Animation control script
-- ✅ Full documentation
+1. Clone the repository
+2. Open in Unity 2022.3+
+3. Open `Assets/Scenes/Custom Shader.unity`
+4. Select avatar in the scene and swap materials to compare shader versions
 
-### Rendering
-- Custom toon/cel shading
-- VR-ready rendering pipeline
+Each version's materials are pre-configured in the corresponding `Materials/` subfolder.
+
+---
+
+## Techniques
+
+### Toon Shading (all versions)
+Quantised diffuse lighting using the `floor()` function on Lambert dot product, producing discrete shading bands.
+
+### Geometry-Expansion Outline (all versions)
+Inverted hull method: back-face pass expands vertices along normals in world space, producing distance-independent silhouettes.
+
+### Normal-Based Edge Detection (V2)
+Screen-space derivative computation via HLSL `ddx()`/`ddy()` intrinsics. Detects surface orientation discontinuities without additional texture samples.
+
+### Sobel Edge Detection (V3, V4)
+3×3 convolution kernel applied to texture luminance. Detects colour/intensity boundaries in painted texture features (facial details, clothing).
+
+### Gaussian Pre-Filtering (V4)
+9-tap Gaussian approximation applied at each of the 9 Sobel sample positions — 81 texture samples total. Suppresses high-frequency noise before differentiation.
+
+---
+
+## Report
+
+The full academic report is included as `NidanurGunay_Project_Report.pdf`, covering:
+- Related work (NPR, silhouette rendering, edge detection theory)
+- Methodology and implementation details
+- Per-version results with observations
+- Discussion with comparison tables
+- Conclusion and practical recommendations
+
+---
 
 ## Requirements
 
 - Unity 2022.3 LTS or later
-- XR Interaction Toolkit (included)
-- Universal Render Pipeline (URP) compatible
-
-## Tips
-
-- For best results, download animations from Mixamo with the same character proportions
-- Use "Without Skin" option when downloading Mixamo animations (we already have the character)
-- Keep animations organized in subfolders within `Assets/Animations/`
-- Test animations in Play mode using the SimpleAnimationController (keys 1, 2, 3)
-
-## Resources
-
-- [Mixamo - Free Character Animations](https://www.mixamo.com/)
-- [Unity Animation Documentation](https://docs.unity3d.com/Manual/AnimationSection.html)
-- [Animation System Documentation](Assets/Animations/README_ANIMATIONS.md)
-
-## License
-
-Please ensure you comply with any licensing requirements for assets used in this project, including Mixamo animations.
+- Universal Render Pipeline (URP)
+- XR Interaction Toolkit (included in project)

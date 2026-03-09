@@ -2,6 +2,7 @@
 // All-in-one shader with configurable edge detection methods
 // Combines: Texture Sobel, Normal Edges, and Fresnel Silhouette
 // Supports multiple filtering modes for Sobel
+// Outer outline (geometry expansion) is now OPTIONAL - can be disabled to see only normal/inner edges
 
 Shader "Custom/ToonShader_V7_Combined"
 {
@@ -21,7 +22,8 @@ Shader "Custom/ToonShader_V7_Combined"
         _ToonSmoothness ("Smoothness", Range(0.001, 0.1)) = 0.01
         _ShadowStrength ("Shadow Strength", Range(0, 1)) = 0.7
 
-        [Header(Outer Outline)]
+        [Header(Outer Outline Geometry Expansion)]
+        [Toggle] _EnableOuterOutline ("Enable Outer Outline (Geometry)", Float) = 1
         _OuterOutlineWidth ("Outer Outline Width (world units)", Range(0,0.5)) = 0.005
         _OuterOutlineColor ("Outer Outline Color", Color) = (0,0,0,1)
         [Toggle] _UseOutlineDepthOffset ("Use Depth Offset (fix z-fighting)", Float) = 0
@@ -83,6 +85,7 @@ Shader "Custom/ToonShader_V7_Combined"
             TEXTURE2D(_MainTex);
             SAMPLER(sampler_MainTex);
             float4 _MainTex_ST;
+            float _EnableOuterOutline;
             float _OuterOutlineWidth;
             float4 _OuterOutlineColor;
             float _EnableAlphaTest;
@@ -92,6 +95,15 @@ Shader "Custom/ToonShader_V7_Combined"
             v2f_outline vert_outline(appdata_outline v)
             {
                 v2f_outline o;
+
+                // If outline is disabled, collapse geometry to a degenerate triangle
+                if (_EnableOuterOutline < 0.5)
+                {
+                    o.pos = float4(0, 0, 0, 1);
+                    o.uv = float2(0, 0);
+                    return o;
+                }
+
                 VertexPositionInputs posInputs = GetVertexPositionInputs(v.vertex.xyz);
                 VertexNormalInputs normInputs = GetVertexNormalInputs(v.normal);
                 o.pos = TransformWorldToHClip(posInputs.positionWS + normInputs.normalWS * _OuterOutlineWidth);
@@ -106,6 +118,12 @@ Shader "Custom/ToonShader_V7_Combined"
 
             half4 frag_outline(v2f_outline i) : SV_Target
             {
+                // Discard if outline is disabled
+                if (_EnableOuterOutline < 0.5)
+                {
+                    clip(-1);
+                }
+
                 if (_EnableAlphaTest > 0.5)
                 {
                     half alpha = SAMPLE_TEXTURE2D(_MainTex, sampler_MainTex, i.uv).a;
@@ -151,7 +169,7 @@ Shader "Custom/ToonShader_V7_Combined"
             TEXTURE2D(_MainTex); SAMPLER(sampler_MainTex);
             float4 _MainTex_ST, _Color, _RimColor, _AmbientColor, _EdgeColor, _SobelLineColor, _OuterOutlineColor;
             float _TextureIntensity, _ToonSteps, _ToonThreshold, _ToonSmoothness, _ShadowStrength;
-            float _RimPower;
+            float _RimPower, _EnableOuterOutline;
             float _EnableTextureSobel, _SobelFilterMode, _SobelThreshold, _SobelSampleDistance, _SobelStrength;
             float _EnableNormalEdges, _NormalEdgeThreshold, _NormalEdgeStrength, _NormalEdgeSmoothness;
             float _EnableFresnelEdge, _FresnelEdgeThreshold, _FresnelEdgeStrength;

@@ -1,5 +1,7 @@
-// Version 2: Basic Sobel Edge Detection
+// Version 2: Basic Sobel Edge Detection (NO PRE-BLUR)
 // This version adds simple Sobel operator for texture edge detection
+// NO Gaussian pre-filtering - this is the raw/unfiltered baseline
+// Compare with V3+ to see the effect of pre-blur on noise suppression
 
 Shader "Custom/ToonShader_V2_SimpleSobel"
 {

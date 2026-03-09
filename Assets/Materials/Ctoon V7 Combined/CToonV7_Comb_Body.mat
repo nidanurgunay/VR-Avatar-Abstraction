@@ -15,11 +15,8 @@ Material:
   - _SOBELFILTERMODE_NONE
   - _USEOUTLINEDEPTHOFFSET_ON
   m_InvalidKeywords:
-  - _ENABLEFRESNELEDGE_ON
   - _ENABLEINNERLINES_ON
   - _ENABLENORMALEDGES_ON
-  - _ENABLETEXTURESOBEL_ON
-  - _USEDEBUGDEFAULTS_ON
   - _USETEXTUREEDGES_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -51,10 +48,11 @@ Material:
     - _DebugInnerLines: 0
     - _DebugRawEdges: 0
     - _EnableAlphaTest: 0
-    - _EnableFresnelEdge: 1
+    - _EnableFresnelEdge: 0
     - _EnableInnerLines: 1
     - _EnableNormalEdges: 1
-    - _EnableTextureSobel: 1
+    - _EnableOuterOutline: 0
+    - _EnableTextureSobel: 0
     - _FresnelEdgeStrength: 0.545
     - _FresnelEdgeThreshold: 0.223
     - _InnerLineBlur: 0.5
@@ -63,9 +61,9 @@ Material:
     - _InnerLineThreshold: 0.05
     - _InnerLineWidth: 2.16
     - _LineMapStrength: 1
-    - _NormalEdgeSmoothness: 0.012
+    - _NormalEdgeSmoothness: 0.01
     - _NormalEdgeStrength: 1
-    - _NormalEdgeThreshold: 0.5
+    - _NormalEdgeThreshold: 0.1
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
