@@ -14,10 +14,10 @@ Four shader versions are implemented and compared:
 
 | Version | Shader | Technique |
 |---------|--------|-----------|
-| V1 | `Toon_V1_NoInnerLines` | Quantised toon shading + geometry-expansion silhouette outline |
-| V2 | `Toon_V7_Combined` | V1 + screen-space normal edge detection (ddx/ddy derivatives) |
-| V3 | `Toon_V2_SimpleSobel` | V1 + texture-based Sobel edge detection (raw, no pre-filtering) |
-| V4 | `Toon_V10_Ultimate` | V1 + Gaussian pre-filtered Sobel with multi-pass smoothstep sharpening |
+| V1 | `V1_ToonShading_GeometryOutline` | Quantised toon shading + geometry-expansion silhouette outline |
+| V2 | `V2_NormalEdgeDetection` | V1 + screen-space normal edge detection (ddx/ddy derivatives) |
+| V3 | `V3_SobelEdgeDetection` | V1 + texture-based Sobel edge detection (raw, no pre-filtering) |
+| V4 | `V4_GaussianPreFilteredSobel` | V1 + Gaussian pre-filtered Sobel with multi-pass smoothstep sharpening |
 
 ---
 
@@ -35,10 +35,10 @@ Four shader versions are implemented and compared:
 ```
 Assets/
 ├── Shaders/
-│   ├── Toon_V1_NoInnerLines.shader       # Report V1: Base toon + geometry outline
-│   ├── Toon_V2_SimpleSobel.shader        # Report V3: Raw Sobel inner lines
-│   ├── Toon_V7_Combined.shader           # Report V2: Normal-based edge detection
-│   ├── Toon_V10_Ultimate.shader          # Report V4: Gaussian pre-filtered Sobel
+│   ├── V1_ToonShading_GeometryOutline.shader   # V1: Base toon + geometry outline
+│   ├── V2_NormalEdgeDetection.shader           # V2: Normal-based edge detection
+│   ├── V3_SobelEdgeDetection.shader            # V3: Raw Sobel inner lines
+│   ├── V4_GaussianPreFilteredSobel.shader      # V4: Gaussian pre-filtered Sobel
 │   └── *.shadergraph                     # Shader graph experiments
 ├── Materials/
 │   ├── CToon V1 Toon only/               # V1 materials (body, hair, clothing, eyelash)
