@@ -4,7 +4,7 @@
 // Supports multiple filtering modes for Sobel
 // Outer outline (geometry expansion) is now OPTIONAL - can be disabled to see only normal/inner edges
 
-Shader "Custom/ToonShader_V7_Combined"
+Shader "Custom/V2_NormalEdgeDetection"
 {
     Properties
     {
