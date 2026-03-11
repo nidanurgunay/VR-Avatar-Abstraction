@@ -6,6 +6,14 @@ A Unity URP project implementing and comparing four non-photorealistic rendering
 
 ---
 
+## Demo
+
+> ⚠️ The video below was recorded during an early stage of development and does not reflect the final shader versions documented in this project.
+
+[![VR Avatar Toon Shading Demo](https://img.youtube.com/vi/X4YvsHAoSLA/maxresdefault.jpg)](https://youtu.be/X4YvsHAoSLA)
+
+---
+
 ## Overview
 
 Photorealistic VR avatars risk triggering the uncanny valley effect. This project explores toon/cel shading as an alternative, progressively introducing different edge detection methods to evaluate their suitability for VR avatar rendering.
@@ -30,6 +38,16 @@ Four shader versions are implemented and compared:
 
 ---
 
+## Skills Demonstrated
+
+- **HLSL / ShaderLab** — Custom multi-pass shaders written from scratch in Unity URP
+- **Real-time rendering** — Forward rendering pipeline, geometry expansion, screen-space techniques
+- **Edge detection algorithms** — Sobel operator, Gaussian pre-filtering, screen-space normal derivatives
+- **VR development** — Unity XR Interaction Toolkit, single-pass stereo rendering, performance considerations
+- **NPR research** — Academic evaluation methodology, literature review, empirical comparison
+
+---
+
 ## Project Structure
 
 ```
@@ -39,18 +57,18 @@ Assets/
 │   ├── V2_NormalEdgeDetection.shader           # V2: Normal-based edge detection
 │   ├── V3_SobelEdgeDetection.shader            # V3: Raw Sobel inner lines
 │   ├── V4_GaussianPreFilteredSobel.shader      # V4: Gaussian pre-filtered Sobel
-│   └── *.shadergraph                     # Shader graph experiments
+│   └── *.shadergraph                           # Shader graph experiments
 ├── Materials/
-│   ├── CToon V1 Toon only/               # V1 materials (body, hair, clothing, eyelash)
-│   ├── CToon V2 Sobel/                   # V3 materials
-│   ├── Ctoon V7 Combined/               # V2 materials
-│   ├── CToon V10/                        # V4 materials
-│   └── Original/                         # Unmodified PBR avatar materials
+│   ├── CToon V1 Toon only/                     # V1 materials (body, hair, clothing, eyelash)
+│   ├── Ctoon V7 Combined/                      # V2 materials
+│   ├── CToon V2 Sobel/                         # V3 materials
+│   ├── CToon V10/                              # V4 materials
+│   └── Original/                              # Unmodified PBR avatar materials
 ├── Characters/
-│   └── Jade.fbx                          # Humanoid avatar (Mixamo rig)
+│   └── Jade.fbx                               # Humanoid avatar (Mixamo rig)
 ├── Scenes/
-│   └── Custom Shader.unity               # Main comparison scene
-└── Animations/                           # Idle animation + animator controller
+│   └── Custom Shader.unity                    # Main comparison scene
+└── Animations/                                # Idle animation + animator controller
 ```
 
 ---
@@ -98,8 +116,16 @@ The full academic report is included as `NidanurGunay_Project_Report.pdf`, cover
 
 ---
 
-## Requirements
+## Third-Party Assets
 
-- Unity 2022.3 LTS or later
-- Universal Render Pipeline (URP)
-- XR Interaction Toolkit (included in project)
+- **Jade avatar** — Mixamo character model, used under [Mixamo's Terms of Service](https://www.adobe.com/legal/terms.html). Not for redistribution.
+- **Unity XR Interaction Toolkit** — Apache 2.0 License
+- **Yuughues Free Flooring Materials** — Unity Asset Store free asset
+
+---
+
+## License
+
+The shader code in this repository (`Assets/Shaders/`) is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+
+Third-party assets (character models, Unity packages) retain their original licenses as noted above.
