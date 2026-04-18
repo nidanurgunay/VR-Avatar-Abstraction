@@ -160,23 +160,19 @@ public class ToonOutlineRendererFeature : ScriptableRendererFeature
 
             // Use CommandBuffer for rendering
             CommandBuffer cmd = CommandBufferPool.Get("Toon Outline");
-            
+
             using (new ProfilingScope(cmd, s_ProfilingSampler))
             {
-                context.ExecuteCommandBuffer(cmd);
-                cmd.Clear();
-                
-                // Create and execute renderer list (Unity 6 way)
                 var rendererListParams = new RendererListParams(
                     renderingData.cullResults,
                     drawingSettings,
                     filterSettings
                 );
-                
+
                 RendererList rendererList = context.CreateRendererList(ref rendererListParams);
                 cmd.DrawRendererList(rendererList);
             }
-            
+
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }

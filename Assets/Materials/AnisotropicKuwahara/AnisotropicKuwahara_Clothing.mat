@@ -7,29 +7,15 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CToonV11_Body
-  m_Shader: {fileID: 4800000, guid: cc3f66e06de3e4c789b3803962b3baf6, type: 3}
+  m_Name: AnisotropicKuwahara_Clothing
+  m_Shader: {fileID: 4800000, guid: b2466d13b2c9f4b5c80fbef454266920, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
-  m_ValidKeywords:
-  - _EDGEBLENDMODE_MAX
-  - _USEOUTLINEDEPTHOFFSET_ON
+  m_ValidKeywords: []
   m_InvalidKeywords:
-  - _DEBUGVIEW_FINAL
-  - _ENABLEGAUSSIANBLUR_ON
+  - _DEBUGMODE_OFF
+  - _DETAILMODE_MANUAL
   - _ENABLEINNERLINES_ON
-  - _ENABLEOUTEROUTLINE_ON
-  - _ENABLEPASS1_ON
-  - _ENABLEPASS2_ON
-  - _ENABLEPASS3_ON
-  - _ENABLEPASS4_ON
-  - _ENABLEPOWERCURVE_ON
-  - _ENABLERIM_ON
-  - _ENABLETEXTURESOBEL_ON
-  - _ENABLETHRESHOLD_ON
-  - _ENABLETOONSHADING_ON
-  - _FILTERINGPRESET_AGGRESSIVE
-  - _USEDEBUGDEFAULTS_ON
   - _USETEXTUREEDGES_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -42,6 +28,14 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _AbstractNormalMap:
+        m_Texture: {fileID: 2800000, guid: 8c8eedd0915724818be4399b70dba86a, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BaseMap:
+        m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _LineMap:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -54,82 +48,67 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ToonRamp:
+        m_Texture: {fileID: 2800000, guid: 0115dac2e9f414d18b5ef82ea5bb4d4e, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
     - _AlphaCutoff: 0.07
-    - _BlurRadiusMultiplier: 1.43
-    - _CullMode: 2
     - _DebugInnerLines: 0
+    - _DebugMode: 0
     - _DebugRawEdges: 0
-    - _DebugView: 0
-    - _EdgeBlendMode: 0
+    - _DepthFar: 50
+    - _DepthNear: 5
+    - _DetailBias: 0.392
+    - _DetailMode: 2
     - _EnableAlphaTest: 0
-    - _EnableFresnelEdge: 0
-    - _EnableGaussianBlur: 1
     - _EnableInnerLines: 1
-    - _EnableNormalEdges: 0
-    - _EnableOuterOutline: 1
-    - _EnablePass1: 1
-    - _EnablePass2: 1
-    - _EnablePass3: 1
-    - _EnablePass4: 1
-    - _EnablePowerCurve: 1
-    - _EnableRim: 1
-    - _EnableTextureSobel: 1
-    - _EnableThreshold: 1
-    - _EnableToonShading: 1
-    - _FilteringPreset: 3
-    - _FresnelEdgeStrength: 0.3
-    - _FresnelEdgeThreshold: 0.3
-    - _GaussianCardinalWeight: 0
-    - _GaussianCenterWeight: 0.123
-    - _GaussianDiagonalWeight: 0
-    - _Glossiness: 0.5
-    - _InnerLineBlur: 0.2
+    - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.059
-    - _InnerLineWidth: 2
+    - _InnerLineThreshold: 0.193
+    - _InnerLineWidth: 2.16
+    - _LightSensitivity: 0
     - _LineMapStrength: 1
-    - _Metallic: 0
-    - _NormalEdgeSmoothness: 0.113
-    - _NormalEdgeStrength: 1
-    - _NormalEdgeThreshold: 0.281
-    - _OuterOutlineWidth: 0.01
-    - _OutlineDepthBias: 4
-    - _OutlineWidth: 0.005
-    - _PowerCurve: 1.5
-    - _RimPower: 4
-    - _ShadowStrength: 0.6
+    - _ManualDetail: 0
+    - _NormalSmoothing: 0.077
+    - _OuterOutlineWidth: 0.011
+    - _OutlineDepthBias: 1
+    - _OutlineWidth: 0.0225
+    - _RampSmoothing: 0.0038
+    - _RimPower: 2.94
+    - _RimStrength: 0.3
+    - _RimThreshold: 0.1
+    - _ShadowStrength: 0.263
     - _ShowTextureOnly: 0
-    - _SmoothstepPasses: 4
-    - _SmoothstepTightness: 0.2
     - _SpecPower: 16
     - _SpecThreshold: 0.9
+    - _SpecularSize: 0.1
+    - _SpecularSmoothness: 0.05
+    - _SpecularStrength: 0.5
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
     - _TextureIntensity: 1
-    - _ThresholdMaxMultiplier: 2
-    - _ThresholdMinMultiplier: 0.2
-    - _ToonSmoothness: 0.03
-    - _ToonSteps: 4
-    - _ToonThreshold: 0.453
-    - _UseAggressiveFiltering: 0
-    - _UseDebugDefaults: 1
-    - _UseLightFiltering: 0
-    - _UseModerateFiltering: 0
-    - _UseOutlineDepthOffset: 1
+    - _ToonSmoothness: 0.037
+    - _ToonSteps: 10
+    - _ToonThreshold: 1
+    - _UseAbstractNormals: 0
+    - _UseDebugDefaults: 0
+    - _UseOutlineDepthOffset: 0
     - _UseRamp: 0
     - _UseTextureEdges: 1
     m_Colors:
-    - _AmbientColor: {r: 0.9056604, g: 0.89284444, b: 0.89284444, a: 1}
+    - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
+    - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
-    - _EdgeColor: {r: 0, g: 0, b: 0, a: 1}
     - _InnerLineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.408, g: 0.408, b: 0.408, a: 1}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
+    - _ShadowColor: {r: 0.24999997, g: 0.24999997, b: 0.34999996, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
+    - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
 --- !u!114 &1269347749357950877
