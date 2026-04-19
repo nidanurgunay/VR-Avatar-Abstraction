@@ -12,6 +12,7 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _DEBUGMODE_OFF
   - _DETAILMODE_DEPTH
   m_InvalidKeywords:
   - _ENABLEINNERLINES_ON
@@ -33,7 +34,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LineMap:
@@ -57,10 +58,11 @@ Material:
     - _AlphaCutoff: 0.07
     - _CullMode: 2
     - _DebugInnerLines: 0
+    - _DebugMode: 0
     - _DebugRawEdges: 0
     - _DepthFar: 50
     - _DepthNear: 5
-    - _DetailBias: 0.5
+    - _DetailBias: 0.494
     - _DetailMode: 0
     - _EnableAlphaTest: 0
     - _EnableInnerLines: 1
@@ -69,21 +71,24 @@ Material:
     - _InnerLineStrength: 1
     - _InnerLineThreshold: 0.05
     - _InnerLineWidth: 2.16
+    - _LightSensitivity: 0.389
     - _LineMapStrength: 1
     - _ManualDetail: 0
     - _NormalSmoothing: 0
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
-    - _OutlineWidth: 0.005
-    - _RampSmoothing: 0.01
-    - _RimPower: 4
-    - _RimThreshold: 0.1
-    - _ShadowStrength: 0.6
+    - _OutlineWidth: 0.0044
+    - _RampSmoothing: 0.0017
+    - _RimPower: 2.37
+    - _RimStrength: 0.28
+    - _RimThreshold: 0.561
+    - _ShadowStrength: 0.261
     - _ShowTextureOnly: 0
     - _SpecPower: 16
     - _SpecThreshold: 0.9
     - _SpecularSize: 0.1
     - _SpecularSmoothness: 0.05
+    - _SpecularStrength: 0.5
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
     - _TextureIntensity: 1
@@ -103,6 +108,7 @@ Material:
     - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 0.408, g: 0.408, b: 0.408, a: 1}
+    - _ShadowColor: {r: 0.24999997, g: 0.24999997, b: 0.34999996, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []

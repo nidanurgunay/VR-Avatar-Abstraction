@@ -21,15 +21,17 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: CustomXToon_Eyelash
-  m_Shader: {fileID: 4800000, guid: 7986563aaa55c4976ba81b44c8a9c64a, type: 3}
+  m_Shader: {fileID: 4800000, guid: a907746e1fe10437989815069acc78fc, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _USEOUTLINEDEPTHOFFSET_ON
+  - _DEBUGMODE_OFF
+  - _DETAILMODE_DEPTH
   m_InvalidKeywords:
   - _ALPHATEST_ON
   - _ENABLEALPHATEST_ON
   - _NORMALMAP
+  - _USEOUTLINEDEPTHOFFSET_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
@@ -41,6 +43,10 @@ Material:
   m_SavedProperties:
     serializedVersion: 3
     m_TexEnvs:
+    - _AbstractNormalMap:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - _BaseMap:
         m_Texture: {fileID: 2800000, guid: bc6cf26b1e63543dcb9692450a7117f6, type: 3}
         m_Scale: {x: 1, y: 1}
@@ -85,6 +91,10 @@ Material:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
+    - _ToonRamp:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
     - unity_Lightmaps:
         m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
@@ -111,7 +121,12 @@ Material:
     - _Cull: 0
     - _CullMode: 2
     - _Cutoff: 0.3
+    - _DebugMode: 0
+    - _DepthFar: 50
+    - _DepthNear: 5
     - _DetailAlbedoMapScale: 1
+    - _DetailBias: 0.5
+    - _DetailMode: 0
     - _DetailNormalMapScale: 1
     - _DstBlend: 0
     - _DstBlendAlpha: 0
@@ -120,19 +135,29 @@ Material:
     - _GlossMapScale: 1
     - _Glossiness: 0.4472136
     - _GlossyReflections: 1
+    - _LightSensitivity: 1
+    - _ManualDetail: 0
     - _Metallic: 0
     - _Mode: 3
+    - _NormalSmoothing: 0
     - _OcclusionStrength: 1
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
+    - _OutlineWidth: 0.003
     - _Parallax: 0.02
     - _QueueOffset: -9
+    - _RampSmoothing: 0.01
     - _ReceiveShadows: 1
     - _RimPower: 4
+    - _RimStrength: 0.3
+    - _RimThreshold: 0.1
     - _ShadowStrength: 0.6
     - _Smoothness: 0.25
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
+    - _SpecularSize: 0.03
+    - _SpecularSmoothness: 0.02
+    - _SpecularStrength: 0.5
     - _SrcBlend: 1
     - _SrcBlendAlpha: 1
     - _Surface: 0
@@ -141,6 +166,7 @@ Material:
     - _ToonSteps: 4
     - _ToonThreshold: 0.4
     - _UVSec: 0
+    - _UseAbstractNormals: 0
     - _UseDebugDefaults: 0
     - _UseOutlineDepthOffset: 1
     - _WorkflowMode: 1
@@ -151,7 +177,10 @@ Material:
     - _Color: {r: 1, g: 1, b: 1, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
+    - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _RimColor: {r: 0.408, g: 0.408, b: 0.408, a: 1}
+    - _ShadowColor: {r: 0.24999997, g: 0.24999997, b: 0.34999996, a: 1}
     - _SpecColor: {r: 0.19999996, g: 0.19999996, b: 0.19999996, a: 1}
+    - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1

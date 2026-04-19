@@ -88,7 +88,7 @@ MonoBehaviour:
   m_Active: 1
   settings:
     renderPassEvent: 550
-    kuwaharaShader: {fileID: 0}
+    kuwaharaShader: {fileID: 4800000, guid: b2466d13b2c9f4b5c80fbef454266920, type: 3}
     kernelSize: 4
     sectorCount: 8
     sharpness: 8

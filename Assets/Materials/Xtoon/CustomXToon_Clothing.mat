@@ -75,7 +75,7 @@ Material:
     - _NormalSmoothing: 0.077
     - _OuterOutlineWidth: 0.011
     - _OutlineDepthBias: 1
-    - _OutlineWidth: 0.0225
+    - _OutlineWidth: 0.0044
     - _RampSmoothing: 0.0038
     - _RimPower: 2.94
     - _RimStrength: 0.3
