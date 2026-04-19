@@ -107,7 +107,7 @@ Shader "NPR/AnisotropicKuwahara"
             TEXTURE2D(_StructureTensor);
             SAMPLER(sampler_StructureTensor);
 
-            #define MAX_RADIUS 8
+            #define MAX_RADIUS 16
 
             int   _KernelSize;
             int   _SectorCount;
@@ -217,6 +217,35 @@ Shader "NPR/AnisotropicKuwahara"
                 return (totalW > 0.0)
                     ? result / totalW
                     : SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
+            }
+            ENDHLSL
+        }
+        // =====================================================================
+        // PASS 3: Masked Composite
+        // Blends original scene with Kuwahara result using an avatar mask
+        // =====================================================================
+        Pass
+        {
+            Name "MaskedComposite"
+            ZWrite Off Cull Off ZTest Always
+
+            HLSLPROGRAM
+            #pragma vertex Vert
+            #pragma fragment FragMaskedComposite
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+            #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
+
+            TEXTURE2D(_KuwaharaResult);
+            TEXTURE2D(_AvatarMask);
+
+            float4 FragMaskedComposite(Varyings input) : SV_Target
+            {
+                float2 uv      = input.texcoord;
+                float4 original = SAMPLE_TEXTURE2D_X(_BlitTexture,    sampler_LinearClamp, uv);
+                float4 kuwahara = SAMPLE_TEXTURE2D  (_KuwaharaResult, sampler_LinearClamp, uv);
+                float  mask     = SAMPLE_TEXTURE2D  (_AvatarMask,     sampler_LinearClamp, uv).r;
+                return lerp(original, kuwahara, mask);
             }
             ENDHLSL
         }

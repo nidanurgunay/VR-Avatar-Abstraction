@@ -26,7 +26,7 @@ public class AnisotropicKuwaharaFeature : ScriptableRendererFeature
         public RenderPassEvent renderPassEvent = RenderPassEvent.BeforeRenderingPostProcessing;
 
         [Header("Filter")]
-        [Range(2, 8)]  public int   kernelSize  = 4;
+        [Range(2, 16)] public int   kernelSize  = 4;
         [Range(4, 8)]  public int   sectorCount = 8;
 
         [Header("Paper Parameters (Kyprianidis 2009)")]
@@ -68,6 +68,10 @@ public class AnisotropicKuwaharaFeature : ScriptableRendererFeature
         private readonly Settings _s;
         private Material _mat;
 
+        private RTHandle _structureTensorRT;
+        private RTHandle _tensorBlurTempRT;
+        private RTHandle _tempRT;
+
         private static readonly ProfilingSampler s_Sampler =
             new ProfilingSampler("AnisotropicKuwahara");
 
@@ -98,9 +102,22 @@ public class AnisotropicKuwaharaFeature : ScriptableRendererFeature
             return _mat;
         }
 
-        // Execute path — RecordRenderGraph intentionally omitted so Unity falls back here.
-        // Blitter.BlitCameraTexture with TextureHandle inside AddUnsafePass
-        // does not correctly resolve RTHandles in URP 17, causing black output.
+        public override void OnCameraSetup(CommandBuffer cmd, ref RenderingData renderingData)
+        {
+            if (GetMaterial() == null) return;
+
+            var desc = renderingData.cameraData.cameraTargetDescriptor;
+            desc.depthBufferBits = 0;
+            desc.msaaSamples = 1;
+
+            var tensorDesc = desc;
+            tensorDesc.colorFormat = RenderTextureFormat.ARGBFloat;
+
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _structureTensorRT, tensorDesc, name: "_AK_TensorRT");
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _tensorBlurTempRT,  tensorDesc, name: "_AK_TensorBlurRT");
+            RenderingUtils.ReAllocateHandleIfNeeded(ref _tempRT,            desc,       name: "_AK_TempRT");
+        }
+
 #pragma warning disable CS0672
         public override void Execute(ScriptableRenderContext context, ref RenderingData renderingData)
         {
@@ -112,45 +129,38 @@ public class AnisotropicKuwaharaFeature : ScriptableRendererFeature
             mat.SetFloat(SharpnessProp,   _s.sharpness);
             mat.SetFloat(HardnessProp,    _s.hardness);
 
-            var cmd  = CommandBufferPool.Get("AnisotropicKuwahara");
-            var desc = renderingData.cameraData.cameraTargetDescriptor;
-            desc.depthBufferBits = 0;
-
-            int tensorId     = Shader.PropertyToID("_AK_TensorRT");
-            int tensorBlurId = Shader.PropertyToID("_AK_TensorBlurRT");
-            int tempId       = Shader.PropertyToID("_AK_TempRT");
-
-            cmd.GetTemporaryRT(tensorId,     desc);
-            cmd.GetTemporaryRT(tensorBlurId, desc);
-            cmd.GetTemporaryRT(tempId,       desc);
-
+            var cmd = CommandBufferPool.Get("AnisotropicKuwahara");
             var src = renderingData.cameraData.renderer.cameraColorTargetHandle;
 
-            cmd.Blit(src, tensorId, mat, 0);
+            // Pass 0: Compute Structure Tensor
+            Blitter.BlitCameraTexture(cmd, src, _structureTensorRT, mat, 0);
 
-            cmd.SetGlobalVector(BlurDir, new Vector2(1f, 0f));
-            cmd.Blit(tensorId, tempId, mat, 1);
+            // Pass 1a: Blur tensor horizontally
+            _mat.SetVector(BlurDir, new Vector4(1f, 0f, 0f, 0f));
+            Blitter.BlitCameraTexture(cmd, _structureTensorRT, _tensorBlurTempRT, mat, 1);
 
-            cmd.SetGlobalVector(BlurDir, new Vector2(0f, 1f));
-            cmd.Blit(tempId, tensorBlurId, mat, 1);
+            // Pass 1b: Blur tensor vertically
+            _mat.SetVector(BlurDir, new Vector4(0f, 1f, 0f, 0f));
+            Blitter.BlitCameraTexture(cmd, _tensorBlurTempRT, _structureTensorRT, mat, 1);
 
-            cmd.SetGlobalTexture(StructTensor, new RenderTargetIdentifier(tensorBlurId));
-            cmd.Blit(src, tempId, mat, 2);
-            cmd.Blit(tempId, src);
-
-            cmd.ReleaseTemporaryRT(tensorId);
-            cmd.ReleaseTemporaryRT(tensorBlurId);
-            cmd.ReleaseTemporaryRT(tempId);
+            // Pass 2: Anisotropic Kuwahara
+            _mat.SetTexture(StructTensor, _structureTensorRT);
+            Blitter.BlitCameraTexture(cmd, src, _tempRT, mat, 2);
+            Blitter.BlitCameraTexture(cmd, _tempRT, src);
 
             context.ExecuteCommandBuffer(cmd);
             CommandBufferPool.Release(cmd);
         }
 #pragma warning restore CS0672
 
+        public override void OnCameraCleanup(CommandBuffer cmd) { }
+
         public void Dispose()
         {
-            if (_mat != null)
-                CoreUtils.Destroy(_mat);
+            _structureTensorRT?.Release();
+            _tensorBlurTempRT?.Release();
+            _tempRT?.Release();
+            CoreUtils.Destroy(_mat);
         }
     }
 }

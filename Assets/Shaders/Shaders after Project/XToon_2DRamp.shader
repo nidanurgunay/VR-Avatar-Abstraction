@@ -64,6 +64,10 @@ Shader "NPR/XToon_2DRamp"
         _OutlineColor ("Outline Color", Color) = (0, 0, 0, 1)
         _OutlineWidth ("Outline Width", Range(0, 0.05)) = 0.003
 
+        [Header(Alpha)]
+        [Toggle(_ALPHA_BLEND)] _AlphaBlend ("Alpha Blend (Eyelashes)", Float) = 0
+        _AlphaCutoff ("Alpha Cutoff (Shadow)", Range(0.0, 1.0)) = 0.5
+
         [Header(Debug)]
         [KeywordEnum(Off, NdotL, RampUV, Albedo, RampSample)]
         _DebugMode ("Debug Mode", Float) = 0
@@ -73,9 +77,9 @@ Shader "NPR/XToon_2DRamp"
     {
         Tags
         {
-            "RenderType" = "Opaque"
+            "RenderType" = "Transparent"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Geometry"
+            "Queue" = "Transparent"
         }
 
         // =================================================================
@@ -86,6 +90,8 @@ Shader "NPR/XToon_2DRamp"
             Name "XToonForward"
             Tags { "LightMode" = "UniversalForward" }
 
+            Blend SrcAlpha OneMinusSrcAlpha
+            ZWrite Off
             Cull Back
 
             HLSLPROGRAM
@@ -126,6 +132,7 @@ Shader "NPR/XToon_2DRamp"
                 float4 _RimColor;
                 float _RimPower;
                 float _RimThreshold;
+                float _AlphaCutoff;
             CBUFFER_END
 
             struct Attributes
@@ -344,18 +351,28 @@ Shader "NPR/XToon_2DRamp"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
+            TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
+
             float3 _LightDirection;
             float3 _LightPosition;
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float _AlphaCutoff;
+            CBUFFER_END
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                float2 uv : TEXCOORD0;
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             float4 GetShadowPositionHClip(Attributes input)
@@ -384,11 +401,14 @@ Shader "NPR/XToon_2DRamp"
             {
                 Varyings output;
                 output.positionCS = GetShadowPositionHClip(input);
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
 
             half4 ShadowFrag(Varyings input) : SV_TARGET
             {
+                float alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
+                clip(alpha - _AlphaCutoff);
                 return 0;
             }
             ENDHLSL
@@ -412,25 +432,38 @@ Shader "NPR/XToon_2DRamp"
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float _AlphaCutoff;
+            CBUFFER_END
+
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                float2 uv : TEXCOORD0;
             };
 
             Varyings DepthVert(Attributes input)
             {
                 Varyings output;
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
                 return output;
             }
 
             half4 DepthFrag(Varyings input) : SV_TARGET
             {
+                float alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
+                clip(alpha - _AlphaCutoff);
                 return 0;
             }
             ENDHLSL
