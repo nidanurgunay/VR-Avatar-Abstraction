@@ -127,6 +127,8 @@ public class KuwaharaFilterFeature : ScriptableRendererFeature
             if (m_Material == null) return;
 
             var source = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            if (source == null || source.rt == null) return;
+
             bool useMask = m_Settings.avatarLayer != 0 && m_MaskMaterial != null
                            && m_AvatarMaskRT != null && m_OutputRT != null;
 
@@ -229,7 +231,8 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
         public Color edgeColor = Color.black;
 
         [Header("Layer Thresholds")]
-        [Range(0.01f, 1f)] public float depthThreshold = 0.1f;
+        [Tooltip("World-space depth jump in metres that counts as an edge.")]
+        [Range(0.01f, 5f)] public float depthThreshold = 0.5f;
         [Range(0.05f, 2f)] public float normalThreshold = 0.4f;
         [Range(0.01f, 1f)] public float colorThreshold = 0.15f;
 
@@ -372,6 +375,13 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
             }
 
             var source = renderingData.cameraData.renderer.cameraColorTargetHandle;
+            if (source == null || source.rt == null)
+            {
+                context.ExecuteCommandBuffer(cmd);
+                CommandBufferPool.Release(cmd);
+                return;
+            }
+
             Blitter.BlitCameraTexture(cmd, source, m_TempRT, m_Material, 0);
             Blitter.BlitCameraTexture(cmd, m_TempRT, source);
 

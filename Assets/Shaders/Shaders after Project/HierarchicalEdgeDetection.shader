@@ -82,70 +82,81 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
                 return dot(c, float3(0.2126, 0.7152, 0.0722));
             }
 
+            // Roberts Cross operator for a scalar field
+            float RobertsCross(float tl, float tr, float bl, float br)
+            {
+                return abs(tl - br) + abs(tr - bl);
+            }
+
             // ---- LAYER 1: Depth Silhouettes ----
+            // Detects object boundaries using depth discontinuities.
+            // Raw linear-eye-depth differences are in world-space metres, so the
+            // threshold is an absolute depth jump, consistent at any camera distance.
             float ComputeDepthEdge(float2 uv, float2 offset)
             {
-                float tl = GetLinearEyeDepth(uv + float2(-offset.x,  offset.y));
-                float t  = GetLinearEyeDepth(uv + float2(       0,   offset.y));
-                float tr = GetLinearEyeDepth(uv + float2( offset.x,  offset.y));
-                float l  = GetLinearEyeDepth(uv + float2(-offset.x,        0));
-                float r  = GetLinearEyeDepth(uv + float2( offset.x,        0));
-                float bl = GetLinearEyeDepth(uv + float2(-offset.x, -offset.y));
-                float b  = GetLinearEyeDepth(uv + float2(       0,  -offset.y));
-                float br = GetLinearEyeDepth(uv + float2( offset.x, -offset.y));
-
-                float gx = -tl - 2.0*l - bl + tr + 2.0*r + br;
-                float gy = -tl - 2.0*t - tr + bl + 2.0*b + br;
-
-                float centerDepth = GetLinearEyeDepth(uv);
-                float normalizer = max(centerDepth * 0.1, 0.01);
-                return sqrt(gx*gx + gy*gy) / normalizer;
+                float d_tl = GetLinearEyeDepth(uv + float2(-offset.x,  offset.y));
+                float d_tr = GetLinearEyeDepth(uv + float2( offset.x,  offset.y));
+                float d_bl = GetLinearEyeDepth(uv + float2(-offset.x, -offset.y));
+                float d_br = GetLinearEyeDepth(uv + float2( offset.x, -offset.y));
+                return RobertsCross(d_tl, d_tr, d_bl, d_br);
             }
 
             // ---- LAYER 2: Normal Creases ----
+            // Detects surface folds and hard edges using normal discontinuities
             float ComputeNormalEdge(float2 uv, float2 offset)
             {
-                float3 tl = GetWorldNormal(uv + float2(-offset.x,  offset.y));
-                float3 t  = GetWorldNormal(uv + float2(       0,   offset.y));
-                float3 tr = GetWorldNormal(uv + float2( offset.x,  offset.y));
-                float3 l  = GetWorldNormal(uv + float2(-offset.x,        0));
-                float3 r  = GetWorldNormal(uv + float2( offset.x,        0));
-                float3 bl = GetWorldNormal(uv + float2(-offset.x, -offset.y));
-                float3 b  = GetWorldNormal(uv + float2(       0,  -offset.y));
-                float3 br = GetWorldNormal(uv + float2( offset.x, -offset.y));
+                float3 n_tl = GetWorldNormal(uv + float2(-offset.x,  offset.y));
+                float3 n_tr = GetWorldNormal(uv + float2( offset.x,  offset.y));
+                float3 n_bl = GetWorldNormal(uv + float2(-offset.x, -offset.y));
+                float3 n_br = GetWorldNormal(uv + float2( offset.x, -offset.y));
 
-                float3 gx = -tl - 2.0*l - bl + tr + 2.0*r + br;
-                float3 gy = -tl - 2.0*t - tr + bl + 2.0*b + br;
-                return sqrt(dot(gx, gx) + dot(gy, gy));
+                // Roberts Cross on each component, then combine
+                float3 diff1 = abs(n_tl - n_br);
+                float3 diff2 = abs(n_tr - n_bl);
+
+                float edge = dot(diff1 + diff2, float3(1, 1, 1)) / 3.0;
+                return edge;
             }
 
             // ---- LAYER 3: Color/Luminance Detail Edges ----
+            // Detects texture boundaries and fine surface detail
             float ComputeColorEdge(float2 uv, float2 offset)
             {
-                float3 c_tl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-offset.x,  offset.y)).rgb;
-                float3 c_t  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(       0,   offset.y)).rgb;
-                float3 c_tr = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( offset.x,  offset.y)).rgb;
-                float3 c_l  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-offset.x,        0)).rgb;
-                float3 c_r  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( offset.x,        0)).rgb;
-                float3 c_bl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-offset.x, -offset.y)).rgb;
-                float3 c_b  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(       0,  -offset.y)).rgb;
-                float3 c_br = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( offset.x, -offset.y)).rgb;
+                float3 c_tl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
+                    uv + float2(-offset.x,  offset.y)).rgb;
+                float3 c_tr = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
+                    uv + float2( offset.x,  offset.y)).rgb;
+                float3 c_bl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
+                    uv + float2(-offset.x, -offset.y)).rgb;
+                float3 c_br = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
+                    uv + float2( offset.x, -offset.y)).rgb;
 
-                float ltl = Luminance3(c_tl), lt = Luminance3(c_t), ltr = Luminance3(c_tr);
-                float ll  = Luminance3(c_l),                         lr  = Luminance3(c_r);
-                float lbl = Luminance3(c_bl), lb = Luminance3(c_b),  lbr = Luminance3(c_br);
+                // Use luminance for main detection, add color difference for chromatic edges
+                float lumEdge = RobertsCross(
+                    Luminance3(c_tl), Luminance3(c_tr),
+                    Luminance3(c_bl), Luminance3(c_br));
 
-                float gx = -ltl - 2.0*ll - lbl + ltr + 2.0*lr + lbr;
-                float gy = -ltl - 2.0*lt - ltr + lbl + 2.0*lb + lbr;
-                return sqrt(gx*gx + gy*gy);
+                // Chromatic edge (catches color-only boundaries)
+                float3 colDiff1 = abs(c_tl - c_br);
+                float3 colDiff2 = abs(c_tr - c_bl);
+                float chromaEdge = length(colDiff1 + colDiff2) * 0.3;
+
+                return max(lumEdge, chromaEdge);
             }
 
             float4 Frag(Varyings input) : SV_Target
             {
                 float2 uv = input.texcoord;
 
+                // Projection-aware world-space kernel.
+                // projScale = cot(fov/2) * aspect — encodes both FOV and aspect ratio.
+                // Dividing by depth AND projScale keeps the physical sampling distance
+                // constant regardless of camera distance or zoom level.
                 float centerDepth = GetLinearEyeDepth(uv);
-                float2 offset = _BlitTexture_TexelSize.xy * _EdgeWidth;
+                float2 projScale = float2(unity_CameraProjection[0][0],
+                                          unity_CameraProjection[1][1]);
+                float2 offset = _BlitTexture_TexelSize.xy * _EdgeWidth
+                                 * projScale / max(centerDepth, 0.1);
 
                 // ---- Adaptive Sensitivity ----
                 // In dark areas, reduce sensitivity to avoid noisy edges

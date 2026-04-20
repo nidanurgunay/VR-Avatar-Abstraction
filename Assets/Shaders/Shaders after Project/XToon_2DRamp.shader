@@ -48,6 +48,9 @@ Shader "NPR/XToon_2DRamp"
         _ShadowColor ("Shadow Color", Color) = (0.25, 0.25, 0.35, 1)
         _ShadowStrength ("Shadow Strength", Range(0.0, 1.0)) = 0.6
 
+        [Header(Texture vs Lighting)]
+        _LightingStrength ("Lighting Effects Strength", Range(0.0, 1.0)) = 1.0
+
         [Header(Specular)]
         _SpecularColor ("Specular Color", Color) = (1, 1, 1, 1)
         _SpecularSize ("Specular Size", Range(0.0, 1.0)) = 0.03
@@ -65,8 +68,11 @@ Shader "NPR/XToon_2DRamp"
         _OutlineWidth ("Outline Width", Range(0, 0.05)) = 0.003
 
         [Header(Alpha)]
-        [Toggle(_ALPHA_BLEND)] _AlphaBlend ("Alpha Blend (Eyelashes)", Float) = 0
+        [AlphaBlendToggle] _AlphaBlend ("Alpha Blend (Eyelashes)", Float) = 0
         _AlphaCutoff ("Alpha Cutoff (Shadow)", Range(0.0, 1.0)) = 0.5
+        [HideInInspector] _SrcBlend ("__src", Float) = 1.0
+        [HideInInspector] _DstBlend ("__dst", Float) = 0.0
+        [HideInInspector] _ZWrite  ("__zw",  Float) = 1.0
 
         [Header(Debug)]
         [KeywordEnum(Off, NdotL, RampUV, Albedo, RampSample)]
@@ -77,9 +83,9 @@ Shader "NPR/XToon_2DRamp"
     {
         Tags
         {
-            "RenderType" = "Transparent"
+            "RenderType" = "Opaque"
             "RenderPipeline" = "UniversalPipeline"
-            "Queue" = "Transparent"
+            "Queue" = "Geometry"
         }
 
         // =================================================================
@@ -90,8 +96,8 @@ Shader "NPR/XToon_2DRamp"
             Name "XToonForward"
             Tags { "LightMode" = "UniversalForward" }
 
-            Blend SrcAlpha OneMinusSrcAlpha
-            ZWrite Off
+            Blend [_SrcBlend] [_DstBlend]
+            ZWrite [_ZWrite]
             Cull Back
 
             HLSLPROGRAM
@@ -102,6 +108,7 @@ Shader "NPR/XToon_2DRamp"
             #pragma multi_compile_fragment _ _SHADOWS_SOFT
             #pragma shader_feature_local _DETAILMODE_DEPTH _DETAILMODE_CURVATURE _DETAILMODE_MANUAL
             #pragma shader_feature_local _DEBUGMODE_OFF _DEBUGMODE_NDOTL _DEBUGMODE_RAMPUV _DEBUGMODE_ALBEDO _DEBUGMODE_RAMPSAMPLE
+            #pragma shader_feature_local _ALPHA_BLEND
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -127,12 +134,12 @@ Shader "NPR/XToon_2DRamp"
                 float _SpecularSmoothness;
                 float4 _ShadowColor;
                 float _ShadowStrength;
+                float _LightingStrength;
                 float _SpecularStrength;
                 float _RimStrength;
                 float4 _RimColor;
                 float _RimPower;
                 float _RimThreshold;
-                float _AlphaCutoff;
             CBUFFER_END
 
             struct Attributes
@@ -243,6 +250,7 @@ Shader "NPR/XToon_2DRamp"
                 float shadowMask = rampColor.r;
                 float3 shadowedAlbedo = lerp(albedo * _ShadowColor.rgb, albedo, shadowMask);
                 float3 finalColor = lerp(albedo, shadowedAlbedo, _ShadowStrength);
+                float3 textureColor = finalColor;
 
                 // --- Specular (stylized) ---
                 float3 halfDir = normalize(lightDir + viewDir);
@@ -258,6 +266,9 @@ Shader "NPR/XToon_2DRamp"
                 rim = smoothstep(_RimThreshold - 0.01, _RimThreshold + 0.01,
                     rim * pow(saturate(NdotL + 0.5), 0.2));
                 finalColor = lerp(finalColor, _RimColor.rgb, rim * _RimStrength);
+
+                // Blend between pure texture and fully-lit result
+                finalColor = lerp(textureColor, finalColor, _LightingStrength);
 
                 // --- Debug Output ---
                 #if defined(_DEBUGMODE_NDOTL)
@@ -275,7 +286,12 @@ Shader "NPR/XToon_2DRamp"
                     return float4(rampColor, 1);
                 #endif
 
-                return float4(finalColor, baseMap.a * _BaseColor.a);
+                #if _ALPHA_BLEND
+                    float outAlpha = baseMap.a * _BaseColor.a;
+                #else
+                    float outAlpha = 1.0;
+                #endif
+                return float4(finalColor, outAlpha);
             }
             ENDHLSL
         }
@@ -346,33 +362,39 @@ Shader "NPR/XToon_2DRamp"
             #pragma vertex ShadowVert
             #pragma fragment ShadowFrag
             #pragma multi_compile_vertex _ _CASTING_PUNCTUAL_LIGHT_SHADOW
+            #pragma shader_feature_local _ALPHA_BLEND
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Shadows.hlsl"
 
-            TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
-
             float3 _LightDirection;
             float3 _LightPosition;
 
+            #if _ALPHA_BLEND
+            TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 float4 _BaseColor;
                 float _AlphaCutoff;
             CBUFFER_END
+            #endif
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
                 float3 normalOS : NORMAL;
+                #if _ALPHA_BLEND
                 float2 uv : TEXCOORD0;
+                #endif
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                #if _ALPHA_BLEND
                 float2 uv : TEXCOORD0;
+                #endif
             };
 
             float4 GetShadowPositionHClip(Attributes input)
@@ -401,14 +423,18 @@ Shader "NPR/XToon_2DRamp"
             {
                 Varyings output;
                 output.positionCS = GetShadowPositionHClip(input);
+                #if _ALPHA_BLEND
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+                #endif
                 return output;
             }
 
             half4 ShadowFrag(Varyings input) : SV_TARGET
             {
+                #if _ALPHA_BLEND
                 float alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
                 clip(alpha - _AlphaCutoff);
+                #endif
                 return 0;
             }
             ENDHLSL
@@ -429,41 +455,51 @@ Shader "NPR/XToon_2DRamp"
             HLSLPROGRAM
             #pragma vertex DepthVert
             #pragma fragment DepthFrag
+            #pragma shader_feature_local _ALPHA_BLEND
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
+            #if _ALPHA_BLEND
             TEXTURE2D(_BaseMap); SAMPLER(sampler_BaseMap);
-
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseMap_ST;
                 float4 _BaseColor;
                 float _AlphaCutoff;
             CBUFFER_END
+            #endif
 
             struct Attributes
             {
                 float4 positionOS : POSITION;
+                #if _ALPHA_BLEND
                 float2 uv : TEXCOORD0;
+                #endif
             };
 
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
+                #if _ALPHA_BLEND
                 float2 uv : TEXCOORD0;
+                #endif
             };
 
             Varyings DepthVert(Attributes input)
             {
                 Varyings output;
                 output.positionCS = TransformObjectToHClip(input.positionOS.xyz);
+                #if _ALPHA_BLEND
                 output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
+                #endif
                 return output;
             }
 
             half4 DepthFrag(Varyings input) : SV_TARGET
             {
+                #if _ALPHA_BLEND
                 float alpha = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a * _BaseColor.a;
                 clip(alpha - _AlphaCutoff);
+                #endif
                 return 0;
             }
             ENDHLSL
