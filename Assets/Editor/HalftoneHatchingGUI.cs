@@ -119,6 +119,7 @@ public class HalftoneHatchingGUI : ShaderGUI
         Header("Base");
         DrawWithHint(editor, FindProp("_BaseColor",        props), "default: white");
         DrawWithHint(editor, FindProp("_BaseMap",          props), "default: none");
+        DrawNormalMap(editor, props);
         DrawWithHint(editor, FindProp("_InkColor",         props), "default: (0.05, 0.05, 0.1)");
         DrawWithHint(editor, FindProp("_PaperColor",       props), "default: (0.95, 0.93, 0.88)  used at Influence=0");
         DrawWithHint(editor, FindProp("_TextureInfluence", props), "default: 0.5  (0=flat paper+ink, 1=full texture)");
@@ -162,16 +163,8 @@ public class HalftoneHatchingGUI : ShaderGUI
         Header("Surface");
         DrawSurfaceTypeGUI(editor, props);
 
-        // ----- Debug section -----
-        EditorGUILayout.Space(8);
-        EditorGUILayout.BeginVertical(DebugBoxStyle);
-        Header("Debug");
-        DrawDebugGUI(editor, props);
-        EditorGUILayout.EndVertical();
-
         EditorGUILayout.Space(8);
         editor.RenderQueueField();
-        editor.EnableInstancingField();
 
         EditorGUILayout.Space(4);
         EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
@@ -336,6 +329,30 @@ public class HalftoneHatchingGUI : ShaderGUI
     // =========================================================================
     // Draw helpers
     // =========================================================================
+    static void DrawNormalMap(MaterialEditor editor, MaterialProperty[] props)
+    {
+        var bumpMap   = FindProp("_BumpMap",   props);
+        var bumpScale = FindProp("_BumpScale", props);
+        if (bumpMap == null || bumpScale == null) return;
+
+        EditorGUI.BeginChangeCheck();
+        DrawWithHint(editor, bumpMap,   "default: none  (assigns normal map texture)");
+        DrawWithHint(editor, bumpScale, "default: 1.0  (only active when map is assigned)");
+
+        if (EditorGUI.EndChangeCheck())
+        {
+            foreach (Object t in editor.targets)
+            {
+                Material mat = (Material)t;
+                if (mat.GetTexture("_BumpMap") != null)
+                    mat.EnableKeyword("_NORMALMAP");
+                else
+                    mat.DisableKeyword("_NORMALMAP");
+                EditorUtility.SetDirty(mat);
+            }
+        }
+    }
+
     static void DrawWithHint(MaterialEditor editor, MaterialProperty prop, string hint)
     {
         if (prop == null) return;

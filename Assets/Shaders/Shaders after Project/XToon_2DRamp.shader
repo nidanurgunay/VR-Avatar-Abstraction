@@ -187,7 +187,7 @@ Shader "NPR/XToon_2DRamp"
                 #if defined(_DETAILMODE_DEPTH)
                     float depth = length(_WorldSpaceCameraPos - posWS);
                     float t = saturate((depth - _DepthNear) / (_DepthFar - _DepthNear));
-                    return lerp(0.0, 1.0, t) + _DetailBias;
+                    return saturate(t + _DetailBias);
 
                 #elif defined(_DETAILMODE_CURVATURE)
                     float3 dNdx = ddx(normalWS);
@@ -195,6 +195,7 @@ Shader "NPR/XToon_2DRamp"
                     float curvature = length(dNdx) + length(dNdy);
                     float t = 1.0 - saturate(curvature * 10.0);
                     return t * (1.0 - _DetailBias) + _DetailBias;
+                    return saturate(t + _DetailBias);
 
                 #else // _DETAILMODE_MANUAL
                     return _ManualDetail;
@@ -245,10 +246,15 @@ Shader "NPR/XToon_2DRamp"
                 float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
                 float3 albedo = baseMap.rgb * _BaseColor.rgb;
 
-                // Use ramp.r as shadow mask: lit areas (ramp=1) show full albedo,
-                // shadow areas (ramp=0) blend toward shadow color.
-                float shadowMask = rampColor.r;
-                float3 shadowedAlbedo = lerp(albedo * _ShadowColor.rgb, albedo, shadowMask);
+                // rampV compresses rampU toward neutral (0.5): abstract = flat lighting.
+                // Affects both lit and shadowed areas so it is visible even on fully-lit surfaces.
+                float abstractU    = lerp(rampU, 0.5, rampV * 0.6);
+                float dynSmoothing = lerp(_RampSmoothing, _RampSmoothing + 0.35, rampV);
+                float shadowMask   = smoothstep(0.5 - dynSmoothing,
+                                                0.5 + dynSmoothing, abstractU);
+
+                float3 toonAlbedo = albedo * rampColor.rgb;
+                float3 shadowedAlbedo = lerp(toonAlbedo * _ShadowColor.rgb, toonAlbedo, shadowMask);
                 float3 finalColor = lerp(albedo, shadowedAlbedo, _ShadowStrength);
                 float3 textureColor = finalColor;
 
@@ -504,7 +510,91 @@ Shader "NPR/XToon_2DRamp"
             }
             ENDHLSL
         }
+
+        // =================================================================
+        // PASS 4: Depth Normals
+        // Populates URP's screen-space normals texture so hierarchical/Sobel
+        // edge detection sees the avatar's actual normals (including abstract
+        // normal map when enabled).
+        // =================================================================
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode" = "DepthNormals" }
+            ZWrite On
+            Cull Back
+
+            HLSLPROGRAM
+            #pragma vertex DNVert
+            #pragma fragment DNFrag
+            #pragma multi_compile_instancing
+            #pragma shader_feature_local _ALPHA_BLEND
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_BaseMap);           SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_AbstractNormalMap); SAMPLER(sampler_AbstractNormalMap);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BaseColor;
+                float  _AlphaCutoff;
+                float  _UseAbstractNormals;
+                float  _NormalSmoothing;
+            CBUFFER_END
+
+            struct DNAttr {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+                float4 tangentOS  : TANGENT;
+                float2 uv         : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+            struct DNVary {
+                float4 positionCS  : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+                float3 normalWS    : TEXCOORD1;
+                float3 tangentWS   : TEXCOORD2;
+                float3 bitangentWS : TEXCOORD3;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            DNVary DNVert(DNAttr input)
+            {
+                DNVary output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                VertexPositionInputs vPos = GetVertexPositionInputs(input.positionOS.xyz);
+                VertexNormalInputs   vNrm = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+                output.positionCS  = vPos.positionCS;
+                output.uv          = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.normalWS    = vNrm.normalWS;
+                output.tangentWS   = vNrm.tangentWS;
+                output.bitangentWS = vNrm.bitangentWS;
+                return output;
+            }
+
+            float4 DNFrag(DNVary input) : SV_Target
+            {
+                #if _ALPHA_BLEND
+                clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a
+                     * _BaseColor.a - _AlphaCutoff);
+                #endif
+
+                float3 normalWS = normalize(input.normalWS);
+                if (_UseAbstractNormals > 0.5)
+                {
+                    float3 nTS = UnpackNormal(
+                        SAMPLE_TEXTURE2D(_AbstractNormalMap, sampler_AbstractNormalMap, input.uv));
+                    float3x3 TBN = float3x3(normalize(input.tangentWS),
+                                            normalize(input.bitangentWS), normalWS);
+                    normalWS = normalize(mul(nTS, TBN));
+                }
+                return half4(NormalizeNormalPerPixel(normalWS), 0.0);
+            }
+            ENDHLSL
+        }
     }
 
-    // No CustomEditor 
+    // No CustomEditor
 }

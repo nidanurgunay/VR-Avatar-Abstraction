@@ -54,7 +54,7 @@ Material:
     - _EnableOuterOutline: 0
     - _EnableTextureSobel: 0
     - _FresnelEdgeStrength: 0.545
-    - _FresnelEdgeThreshold: 0.223
+    - _FresnelEdgeThreshold: 0.089
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
@@ -63,7 +63,7 @@ Material:
     - _LineMapStrength: 1
     - _NormalEdgeSmoothness: 0.01
     - _NormalEdgeStrength: 1
-    - _NormalEdgeThreshold: 0.1
+    - _NormalEdgeThreshold: 0.739
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
@@ -73,7 +73,7 @@ Material:
     - _SobelFilterMode: 0
     - _SobelSampleDistance: 0.5
     - _SobelStrength: 1
-    - _SobelThreshold: 0.142
+    - _SobelThreshold: 0.16
     - _SpecPower: 16
     - _SpecThreshold: 0.9
     - _TextureEdgeSmooth: 0.0366

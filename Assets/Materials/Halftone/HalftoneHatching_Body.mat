@@ -12,8 +12,10 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _HALFTONESPACE_WORLDSPACE
-  - _PATTERNMODE_HALFTONE
+  - _HALFTONESPACE_OBJECTSPACE
+  - _HATCHSTYLE_LINE
+  - _NORMALMAP
+  - _PATTERNMODE_HATCHING
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -31,7 +33,11 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 8c8eedd0915724818be4399b70dba86a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LineMap:
@@ -52,8 +58,10 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Alpha: 1
     - _AlphaCutoff: 0.07
-    - _CrossHatchAngle: 135
+    - _BumpScale: 1
+    - _CrossHatchAngle: 132
     - _CullMode: 2
     - _DebugInnerLines: 0
     - _DebugMode: 0
@@ -62,15 +70,18 @@ Material:
     - _DepthNear: 5
     - _DetailBias: 0.5
     - _DetailMode: 0
+    - _DotSize: 0.291
+    - _DstBlend: 0
     - _EnableAlphaTest: 0
     - _EnableInnerLines: 1
-    - _HalftoneAngle: 45
-    - _HalftoneScale: 30
-    - _HalftoneSharpness: 10
-    - _HalftoneSpace: 2
-    - _HatchAngle: 45
-    - _HatchScale: 20
-    - _HatchThickness: 0.15
+    - _HalftoneAngle: 42.9
+    - _HalftoneScale: 100
+    - _HalftoneSharpness: 1
+    - _HalftoneSpace: 1
+    - _HatchAngle: 75
+    - _HatchScale: 100
+    - _HatchStyle: 0
+    - _HatchThickness: 0.044
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
@@ -83,12 +94,11 @@ Material:
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
-    - _PatternMode: 0
+    - _PatternMode: 1
     - _RampSmoothing: 0.01
     - _RimPower: 4
     - _RimStrength: 0.3
     - _RimThreshold: 0.1
-    - _ToneBias: 0
     - _ShadowStrength: 0.6
     - _ShowTextureOnly: 0
     - _SpecPower: 16
@@ -96,12 +106,15 @@ Material:
     - _SpecularSize: 0.1
     - _SpecularSmoothness: 0.05
     - _SpecularStrength: 0.5
-    - _StippleDensity: 1
-    - _StippleScale: 50
+    - _SrcBlend: 1
+    - _StippleDensity: 1.19
+    - _StippleScale: 5
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
+    - _TextureInfluence: 1
     - _TextureIntensity: 1
-    - _ToneLevels: 5
+    - _ToneBias: 0.278
+    - _ToneLevels: 4.19
     - _ToonSmoothness: 0.03
     - _ToonSteps: 4
     - _ToonThreshold: 0.4
@@ -110,6 +123,7 @@ Material:
     - _UseOutlineDepthOffset: 1
     - _UseRamp: 0
     - _UseTextureEdges: 1
+    - _ZWrite: 1
     m_Colors:
     - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}

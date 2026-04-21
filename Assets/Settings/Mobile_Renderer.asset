@@ -1,5 +1,57 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
+--- !u!114 &-3285536939589186609
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: EdgeDetectionFeature
+  m_EditorClassIdentifier: Assembly-CSharp::EdgeDetectionFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    edgeShader: {fileID: 4800000, guid: dedad21106be84ff3885b813f494582e, type: 3}
+    edgeColor: {r: 0, g: 0, b: 0, a: 1}
+    depthThreshold: 5
+    normalThreshold: 3.72
+    colorThreshold: 1
+    depthWeight: 1
+    normalWeight: 1
+    colorWeight: 1
+    edgeWidth: 1
+    adaptiveStrength: 0.548
+    avatarLayer:
+      serializedVersion: 2
+      m_Bits: 2304
+--- !u!114 &-3054778112796006409
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72a37147cf30146778e0fd9258a1018a, type: 3}
+  m_Name: KuwaharaFilterFeature
+  m_EditorClassIdentifier: 
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    kuwaharaShader: {fileID: 4800000, guid: b2466d13b2c9f4b5c80fbef454266920, type: 3}
+    kernelSize: 14
+    sectorCount: 4
+    sharpness: 7.2
+    hardness: 9.65
+    zeroCrossing: 0.451
+    avatarLayer:
+      serializedVersion: 2
+      m_Bits: 7296
 --- !u!114 &11400000
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -26,7 +78,11 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 0}
   m_RendererFeatures:
   - {fileID: 3379074860660714707}
-  m_RendererFeatureMap: d36c22c3aee2e42e
+  - {fileID: 6497422824509803166}
+  - {fileID: -3054778112796006409}
+  - {fileID: -3285536939589186609}
+  - {fileID: 6481428624014121002}
+  m_RendererFeatureMap: d36c22c3aee2e42e9e0a6c52a27b2b5af7e727c77d3f9bd5cfcb5c9b8f6d67d22a186953fea8f259
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -64,10 +120,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7678710a057294b82b798f4d8e5aaeb9, type: 3}
   m_Name: ToonOutlineRendererFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     renderPassEvent: 300
     layerMask:
       serializedVersion: 2
       m_Bits: 4294967295
     outlinePassName: ToonOutline
+--- !u!114 &6481428624014121002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: EdgeDetectionFeature
+  m_EditorClassIdentifier: Assembly-CSharp::EdgeDetectionFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    edgeShader: {fileID: 4800000, guid: cbbd79783d4a74d49bc2c349a189e00c, type: 3}
+    edgeColor: {r: 0, g: 0, b: 0, a: 1}
+    depthThreshold: 0.5
+    normalThreshold: 0.4
+    colorThreshold: 0.124
+    depthWeight: 1
+    normalWeight: 1
+    colorWeight: 1
+    edgeWidth: 0.5
+    adaptiveStrength: 0.021
+    avatarLayer:
+      serializedVersion: 2
+      m_Bits: 4608
+--- !u!114 &6497422824509803166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 0}
+  m_Name: EdgeDetectionFeature
+  m_EditorClassIdentifier: Assembly-CSharp::EdgeDetectionFeature
+  m_Active: 1
+  settings:
+    renderPassEvent: 550
+    edgeShader: {fileID: 4800000, guid: cbbd79783d4a74d49bc2c349a189e00c, type: 3}
+    edgeColor: {r: 0, g: 0, b: 0, a: 1}
+    depthThreshold: 0.01
+    normalThreshold: 0.75
+    colorThreshold: 0.342
+    depthWeight: 1
+    normalWeight: 1
+    colorWeight: 1
+    edgeWidth: 0.5
+    adaptiveStrength: 0.973
+    avatarLayer:
+      serializedVersion: 2
+      m_Bits: 1088

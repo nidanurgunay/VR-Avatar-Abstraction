@@ -25,18 +25,22 @@ Material:
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
+  - _ALPHA_BLEND
   - _DEBUGMODE_OFF
   - _DETAILMODE_DEPTH
   m_InvalidKeywords:
   - _ALPHATEST_ON
   - _ENABLEALPHATEST_ON
   - _NORMALMAP
+  - _RIMBLEND_REPLACE
+  - _SPECULARBLEND_REPLACE
   - _USEOUTLINEDEPTHOFFSET_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_CustomRenderQueue: 3000
+  stringTagMap:
+    RenderType: Transparent
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: _BaseMap
@@ -110,6 +114,7 @@ Material:
     m_Ints: []
     m_Floats:
     - _AddPrecomputedVelocity: 0
+    - _AlphaBlend: 1
     - _AlphaClip: 1
     - _AlphaCutoff: 0.07
     - _AlphaToMask: 1
@@ -128,7 +133,7 @@ Material:
     - _DetailBias: 0.5
     - _DetailMode: 0
     - _DetailNormalMapScale: 1
-    - _DstBlend: 0
+    - _DstBlend: 10
     - _DstBlendAlpha: 0
     - _EnableAlphaTest: 1
     - _EnvironmentReflections: 1
@@ -136,6 +141,7 @@ Material:
     - _Glossiness: 0.4472136
     - _GlossyReflections: 1
     - _LightSensitivity: 1
+    - _LightingStrength: 1
     - _ManualDetail: 0
     - _Metallic: 0
     - _Mode: 3
@@ -148,17 +154,19 @@ Material:
     - _QueueOffset: -9
     - _RampSmoothing: 0.01
     - _ReceiveShadows: 1
+    - _RimBlend: 0
     - _RimPower: 4
     - _RimStrength: 0.3
     - _RimThreshold: 0.1
     - _ShadowStrength: 0.6
     - _Smoothness: 0.25
     - _SmoothnessTextureChannel: 0
+    - _SpecularBlend: 0
     - _SpecularHighlights: 1
     - _SpecularSize: 0.03
     - _SpecularSmoothness: 0.02
     - _SpecularStrength: 0.5
-    - _SrcBlend: 1
+    - _SrcBlend: 5
     - _SrcBlendAlpha: 1
     - _Surface: 0
     - _TextureIntensity: 1
@@ -170,7 +178,7 @@ Material:
     - _UseDebugDefaults: 0
     - _UseOutlineDepthOffset: 1
     - _WorkflowMode: 1
-    - _ZWrite: 1
+    - _ZWrite: 0
     m_Colors:
     - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 0.5882353, g: 0.5882353, b: 0.5882353, a: 1}

@@ -8,9 +8,12 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/Custom Shader.unity
     guid: 4eec01284d1804836b70ef4d9e94f8c2
+  - enabled: 1
+    path: Assets/Scenes/thesis meeting_1.unity
+    guid: 3249b7e5095024f34abe3e2ae6b042b1
   m_configObjects:
     Unity.XR.Oculus.Settings: {fileID: 11400000, guid: d582719198b9a4700ab0b807a692afc1, type: 2}
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}

@@ -13,9 +13,11 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - _DEBUGMODE_OFF
-  - _DETAILMODE_MANUAL
+  - _DETAILMODE_DEPTH
   m_InvalidKeywords:
   - _ENABLEINNERLINES_ON
+  - _RIMBLEND_REPLACE
+  - _SPECULARBLEND_REPLACE
   - _USETEXTUREEDGES_ON
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -54,15 +56,16 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _LightingStrength: 1
+    - _AlphaBlend: 0
     - _AlphaCutoff: 0.07
     - _DebugInnerLines: 0
     - _DebugMode: 0
     - _DebugRawEdges: 0
     - _DepthFar: 50
-    - _DepthNear: 5
-    - _DetailBias: 0.392
-    - _DetailMode: 2
+    - _DepthNear: 0.5
+    - _DetailBias: 0.26
+    - _DetailMode: 0
+    - _DstBlend: 0
     - _EnableAlphaTest: 0
     - _EnableInnerLines: 1
     - _InnerLineBlur: 0.5
@@ -70,35 +73,40 @@ Material:
     - _InnerLineStrength: 1
     - _InnerLineThreshold: 0.193
     - _InnerLineWidth: 2.16
-    - _LightSensitivity: 0
+    - _LightSensitivity: 0.121
+    - _LightingStrength: 1
     - _LineMapStrength: 1
-    - _ManualDetail: 0
-    - _NormalSmoothing: 0.077
+    - _ManualDetail: 0.369
+    - _NormalSmoothing: 1
     - _OuterOutlineWidth: 0.011
     - _OutlineDepthBias: 1
     - _OutlineWidth: 0.0044
-    - _RampSmoothing: 0.0038
-    - _RimPower: 2.94
-    - _RimStrength: 0.3
-    - _RimThreshold: 0.1
-    - _ShadowStrength: 0.263
+    - _RampSmoothing: 0.0337
+    - _RimBlend: 0
+    - _RimPower: 0.5
+    - _RimStrength: 0
+    - _RimThreshold: 1
+    - _ShadowStrength: 0.115
     - _ShowTextureOnly: 0
     - _SpecPower: 16
     - _SpecThreshold: 0.9
-    - _SpecularSize: 0.1
-    - _SpecularSmoothness: 0.05
-    - _SpecularStrength: 0.5
+    - _SpecularBlend: 0
+    - _SpecularSize: 0.024
+    - _SpecularSmoothness: 0.077
+    - _SpecularStrength: 0.503
+    - _SrcBlend: 1
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
     - _TextureIntensity: 1
     - _ToonSmoothness: 0.037
     - _ToonSteps: 10
     - _ToonThreshold: 1
-    - _UseAbstractNormals: 0
+    - _UseAbstractNormals: 0.9
     - _UseDebugDefaults: 0
     - _UseOutlineDepthOffset: 0
     - _UseRamp: 0
     - _UseTextureEdges: 1
+    - _ZWrite: 1
     m_Colors:
     - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}

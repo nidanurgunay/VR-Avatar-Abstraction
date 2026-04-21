@@ -233,7 +233,7 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
         [Header("Layer Thresholds")]
         [Tooltip("World-space depth jump in metres that counts as an edge.")]
         [Range(0.01f, 5f)] public float depthThreshold = 0.5f;
-        [Range(0.05f, 2f)] public float normalThreshold = 0.4f;
+        [Range(0.05f, 5f)] public float normalThreshold = 0.4f;
         [Range(0.01f, 1f)] public float colorThreshold = 0.15f;
 
         [Header("Layer Weights")]
@@ -245,10 +245,10 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
         [Range(0.5f, 4f)] public float edgeWidth = 1f;
         [Range(0, 1)] public float adaptiveStrength = 0.5f;
 
-        [Header("Depth Fade")]
-        public bool fadeWithDepth = false;
-        public float depthFadeStart = 20f;
-        public float depthFadeEnd = 80f;
+        // [Header("Depth Fade")]
+        // public bool fadeWithDepth = false;
+        // public float depthFadeStart = 20f;
+        // public float depthFadeEnd = 80f;
 
         [Header("Avatar Masking")]
         [Tooltip("Set to the layer your avatar is on. Leave Nothing for full-screen edges.")]
@@ -360,9 +360,9 @@ public class EdgeDetectionFeature : ScriptableRendererFeature
             m_Material.SetColor("_EdgeColor",       m_Settings.edgeColor);
             m_Material.SetFloat("_EdgeWidth",       m_Settings.edgeWidth);
             m_Material.SetFloat("_AdaptiveStrength",m_Settings.adaptiveStrength);
-            m_Material.SetFloat("_FadeWithDepth",   m_Settings.fadeWithDepth ? 1f : 0f);
-            m_Material.SetFloat("_DepthFadeStart",  m_Settings.depthFadeStart);
-            m_Material.SetFloat("_DepthFadeEnd",    m_Settings.depthFadeEnd);
+            // m_Material.SetFloat("_FadeWithDepth",   m_Settings.fadeWithDepth ? 1f : 0f);
+            // m_Material.SetFloat("_DepthFadeStart",  m_Settings.depthFadeStart);
+            // m_Material.SetFloat("_DepthFadeEnd",    m_Settings.depthFadeEnd);
 
             if (useMask)
             {

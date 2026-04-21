@@ -7,24 +7,24 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: CustomXToon_Body
-  m_Shader: {fileID: 4800000, guid: a907746e1fe10437989815069acc78fc, type: 3}
+  m_Name: HalftoneHatching_Clothing_Striple
+  m_Shader: {fileID: 4800000, guid: 937be21d7640a4690a1dd9ebc159ba35, type: 3}
   m_Parent: {fileID: 0}
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
-  - _DEBUGMODE_OFF
-  - _DETAILMODE_DEPTH
+  - _HALFTONESPACE_OBJECTSPACE
+  - _HATCHSTYLE_LINE
+  - _NORMALMAP
+  - _PATTERNMODE_HALFTONE
   m_InvalidKeywords:
-  - _ENABLEINNERLINES_ON
-  - _RIMBLEND_REPLACE
-  - _SPECULARBLEND_REPLACE
-  - _USEOUTLINEDEPTHOFFSET_ON
-  - _USETEXTUREEDGES_ON
+  - _DEBUGMODE_OFF
+  - _DETAILMODE_MANUAL
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
   m_DoubleSidedGI: 0
-  m_CustomRenderQueue: -1
-  stringTagMap: {}
+  m_CustomRenderQueue: 2000
+  stringTagMap:
+    RenderType: Opaque
   disabledShaderPasses:
   - MOTIONVECTORS
   m_LockedProperties: 
@@ -32,11 +32,15 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _AbstractNormalMap:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 8c8eedd0915724818be4399b70dba86a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _BaseMap:
         m_Texture: {fileID: 2800000, guid: a60af4f862dc64319a1022bce5fb2852, type: 3}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    - _BumpMap:
+        m_Texture: {fileID: 2800000, guid: 8c8eedd0915724818be4399b70dba86a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _LineMap:
@@ -52,60 +56,75 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _ToonRamp:
-        m_Texture: {fileID: 0}
+        m_Texture: {fileID: 2800000, guid: 0115dac2e9f414d18b5ef82ea5bb4d4e, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _Alpha: 1
     - _AlphaBlend: 0
     - _AlphaCutoff: 0.07
-    - _CullMode: 2
+    - _BumpScale: 1
+    - _CrossHatchAngle: 42
     - _DebugInnerLines: 0
     - _DebugMode: 0
     - _DebugRawEdges: 0
     - _DepthFar: 50
     - _DepthNear: 5
-    - _DetailBias: 0.494
-    - _DetailMode: 0
+    - _DetailBias: 0.392
+    - _DetailMode: 2
+    - _DotSize: 0.102
     - _DstBlend: 0
     - _EnableAlphaTest: 0
     - _EnableInnerLines: 1
+    - _HalftoneAngle: 70
+    - _HalftoneScale: 100
+    - _HalftoneSharpness: 2.3
+    - _HalftoneSpace: 1
+    - _HatchAngle: 89
+    - _HatchScale: 100
+    - _HatchStyle: 0
+    - _HatchThickness: 0.058
     - _InnerLineBlur: 0.5
     - _InnerLineSmooth: 5
     - _InnerLineStrength: 1
-    - _InnerLineThreshold: 0.05
+    - _InnerLineThreshold: 0.193
     - _InnerLineWidth: 2.16
-    - _LightSensitivity: 0.389
-    - _LightingStrength: 0.121
+    - _LightSensitivity: 0
+    - _LightingStrength: 1
     - _LineMapStrength: 1
     - _ManualDetail: 0
-    - _NormalSmoothing: 1
-    - _OuterOutlineWidth: 0.005
-    - _OutlineDepthBias: 4
-    - _OutlineWidth: 0.0044
-    - _RampSmoothing: 0.0017
-    - _RimBlend: 0
-    - _RimPower: 2.37
-    - _RimStrength: 0.121
-    - _RimThreshold: 0.911
-    - _ShadowStrength: 0.261
+    - _NormalSmoothing: 0.077
+    - _OuterOutlineWidth: 0.011
+    - _OutlineDepthBias: 1
+    - _OutlineWidth: 0.005
+    - _PatternMode: 0
+    - _RampSmoothing: 0.0038
+    - _RimPower: 2.94
+    - _RimStrength: 0.3
+    - _RimThreshold: 0.1
+    - _ShadowStrength: 0.263
     - _ShowTextureOnly: 0
     - _SpecPower: 16
     - _SpecThreshold: 0.9
-    - _SpecularBlend: 0
     - _SpecularSize: 0.1
     - _SpecularSmoothness: 0.05
     - _SpecularStrength: 0.5
     - _SrcBlend: 1
+    - _StippleDensity: 0.95
+    - _StippleScale: 200
     - _TextureEdgeSmooth: 0.0366
     - _TextureEdgeThreshold: 0.05
+    - _TextureInfluence: 0.906
     - _TextureIntensity: 1
-    - _ToonSmoothness: 0.03
-    - _ToonSteps: 4
-    - _ToonThreshold: 0.4
-    - _UseAbstractNormals: 0.9
+    - _ToneBias: 0.038
+    - _ToneLevels: 8
+    - _ToonSmoothness: 0.037
+    - _ToonSteps: 10
+    - _ToonThreshold: 1
+    - _UseAbstractNormals: 0
     - _UseDebugDefaults: 0
-    - _UseOutlineDepthOffset: 1
+    - _UseOutlineDepthOffset: 0
     - _UseRamp: 0
     - _UseTextureEdges: 1
     - _ZWrite: 1
@@ -113,10 +132,12 @@ Material:
     - _AmbientColor: {r: 0.29999998, g: 0.29999998, b: 0.29999998, a: 1}
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
     - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _InkColor: {r: 0.049999982, g: 0.049999982, b: 0.09999997, a: 1}
     - _InnerLineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OuterOutlineColor: {r: 0, g: 0, b: 0, a: 1}
     - _OutlineColor: {r: 0, g: 0, b: 0, a: 1}
-    - _RimColor: {r: 0.408, g: 0.408, b: 0.408, a: 1}
+    - _PaperColor: {r: 0.95, g: 0.93, b: 0.88, a: 1}
+    - _RimColor: {r: 1, g: 1, b: 1, a: 1}
     - _ShadowColor: {r: 0.24999997, g: 0.24999997, b: 0.34999996, a: 1}
     - _SpecColor: {r: 1, g: 1, b: 1, a: 1}
     - _SpecularColor: {r: 1, g: 1, b: 1, a: 1}

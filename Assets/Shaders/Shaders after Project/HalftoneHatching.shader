@@ -21,6 +21,8 @@ Shader "NPR/HalftoneHatching"
         [Header(Base)]
         _BaseColor ("Base Color", Color) = (1, 1, 1, 1)
         _BaseMap ("Base Map", 2D) = "white" {}
+        [Normal] _BumpMap ("Normal Map", 2D) = "bump" {}
+        _BumpScale ("Normal Map Scale", Range(0, 2)) = 1.0
         _InkColor ("Ink/Pattern Color", Color) = (0.05, 0.05, 0.1, 1)
         _PaperColor ("Paper Color", Color) = (0.95, 0.93, 0.88, 1)
         _TextureInfluence ("Texture Influence", Range(0, 1)) = 0.5
@@ -94,15 +96,19 @@ Shader "NPR/HalftoneHatching"
             #pragma shader_feature_local _HALFTONESPACE_SCREENSPACE _HALFTONESPACE_OBJECTSPACE _HALFTONESPACE_WORLDSPACE
             #pragma shader_feature_local _HATCHSTYLE_LINE _HATCHSTYLE_DOTS _HATCHSTYLE_COMPOSITION
             #pragma shader_feature_local _ALPHATEST_ON
+            #pragma shader_feature_local _NORMALMAP
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
 
-            TEXTURE2D(_BaseMap);    SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BaseMap);  SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BumpMap);  SAMPLER(sampler_BumpMap);
 
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
                 float4 _BaseMap_ST;
+                float4 _BumpMap_ST;
+                float  _BumpScale;
                 float4 _InkColor;
                 float4 _PaperColor;
                 float  _TextureInfluence;
@@ -127,31 +133,36 @@ Shader "NPR/HalftoneHatching"
             struct Attributes
             {
                 float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
-                float2 uv : TEXCOORD0;
+                float3 normalOS   : NORMAL;
+                float4 tangentOS  : TANGENT;
+                float2 uv         : TEXCOORD0;
             };
 
             struct Varyings
             {
-                float4 positionCS : SV_POSITION;
-                float2 uv : TEXCOORD0;
-                float3 normalWS : TEXCOORD1;
-                float3 positionWS : TEXCOORD2;
-                float4 screenPos : TEXCOORD3;
+                float4 positionCS  : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+                float3 normalWS    : TEXCOORD1;
+                float3 positionWS  : TEXCOORD2;
+                float4 screenPos   : TEXCOORD3;
                 float4 shadowCoord : TEXCOORD4;
+                float3 tangentWS   : TEXCOORD5;
+                float3 bitangentWS : TEXCOORD6;
             };
 
             Varyings vert(Attributes input)
             {
                 Varyings output;
                 VertexPositionInputs vInput = GetVertexPositionInputs(input.positionOS.xyz);
-                VertexNormalInputs nInput = GetVertexNormalInputs(input.normalOS);
+                VertexNormalInputs nInput = GetVertexNormalInputs(input.normalOS, input.tangentOS);
 
-                output.positionCS = vInput.positionCS;
-                output.positionWS = vInput.positionWS;
-                output.normalWS = nInput.normalWS;
-                output.uv = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.screenPos = ComputeScreenPos(vInput.positionCS);
+                output.positionCS  = vInput.positionCS;
+                output.positionWS  = vInput.positionWS;
+                output.normalWS    = nInput.normalWS;
+                output.tangentWS   = nInput.tangentWS;
+                output.bitangentWS = nInput.bitangentWS;
+                output.uv          = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.screenPos   = ComputeScreenPos(vInput.positionCS);
                 output.shadowCoord = GetShadowCoord(vInput);
 
                 return output;
@@ -318,6 +329,16 @@ Shader "NPR/HalftoneHatching"
             {
                 float3 normalWS = normalize(input.normalWS);
 
+                #if defined(_NORMALMAP)
+                float3 normalTS = UnpackNormalScale(
+                    SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,
+                        TRANSFORM_TEX(input.uv, _BumpMap)), _BumpScale);
+                float3x3 TBN = float3x3(normalize(input.tangentWS),
+                                        normalize(input.bitangentWS),
+                                        normalWS);
+                normalWS = normalize(mul(normalTS, TBN));
+                #endif
+
                 // --- Lighting computation ---
                 Light mainLight = GetMainLight(input.shadowCoord);
                 float NdotL = saturate(dot(normalWS, mainLight.direction));
@@ -410,6 +431,8 @@ Shader "NPR/HalftoneHatching"
             CBUFFER_START(UnityPerMaterial)
                 float4 _BaseColor;
                 float4 _BaseMap_ST;
+                float4 _BumpMap_ST;
+                float  _BumpScale;
                 float4 _InkColor;
                 float4 _PaperColor;
                 float  _TextureInfluence;
@@ -432,7 +455,7 @@ Shader "NPR/HalftoneHatching"
             struct Attributes
             {
                 float4 positionOS : POSITION;
-                float3 normalOS : NORMAL;
+                float3 normalOS   : NORMAL;
             };
 
             struct Varyings
@@ -563,6 +586,84 @@ Shader "NPR/HalftoneHatching"
             }
 
             float4 DepthFrag(DepthVaryings input) : SV_Target { return 0; }
+            ENDHLSL
+        }
+
+        // =================================================================
+        // PASS 4: Depth Normals
+        // Populates URP's screen-space normals texture so hierarchical/Sobel
+        // edge detection sees the avatar's normals (including _BumpMap detail).
+        // =================================================================
+        Pass
+        {
+            Name "DepthNormals"
+            Tags { "LightMode" = "DepthNormals" }
+            ZWrite On
+            Cull Back
+
+            HLSLPROGRAM
+            #pragma vertex DNVert
+            #pragma fragment DNFrag
+            #pragma multi_compile_instancing
+            #pragma shader_feature_local _NORMALMAP
+
+            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
+
+            TEXTURE2D(_BaseMap);  SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_BumpMap);  SAMPLER(sampler_BumpMap);
+
+            CBUFFER_START(UnityPerMaterial)
+                float4 _BaseMap_ST;
+                float4 _BumpMap_ST;
+                float4 _BaseColor;
+                float  _AlphaCutoff;
+                float  _BumpScale;
+            CBUFFER_END
+
+            struct DNAttr {
+                float4 positionOS : POSITION;
+                float3 normalOS   : NORMAL;
+                float4 tangentOS  : TANGENT;
+                float2 uv         : TEXCOORD0;
+                UNITY_VERTEX_INPUT_INSTANCE_ID
+            };
+            struct DNVary {
+                float4 positionCS  : SV_POSITION;
+                float2 uv          : TEXCOORD0;
+                float3 normalWS    : TEXCOORD1;
+                float3 tangentWS   : TEXCOORD2;
+                float3 bitangentWS : TEXCOORD3;
+                UNITY_VERTEX_OUTPUT_STEREO
+            };
+
+            DNVary DNVert(DNAttr input)
+            {
+                DNVary output;
+                UNITY_SETUP_INSTANCE_ID(input);
+                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
+                VertexPositionInputs vPos = GetVertexPositionInputs(input.positionOS.xyz);
+                VertexNormalInputs   vNrm = GetVertexNormalInputs(input.normalOS, input.tangentOS);
+                output.positionCS  = vPos.positionCS;
+                output.uv          = TRANSFORM_TEX(input.uv, _BaseMap);
+                output.normalWS    = vNrm.normalWS;
+                output.tangentWS   = vNrm.tangentWS;
+                output.bitangentWS = vNrm.bitangentWS;
+                return output;
+            }
+
+            float4 DNFrag(DNVary input) : SV_Target
+            {
+                float3 normalWS = normalize(input.normalWS);
+                #if defined(_NORMALMAP)
+                float3 nTS = UnpackNormalScale(
+                    SAMPLE_TEXTURE2D(_BumpMap, sampler_BumpMap,
+                        TRANSFORM_TEX(input.uv, _BumpMap)), _BumpScale);
+                float3x3 TBN = float3x3(normalize(input.tangentWS),
+                                        normalize(input.bitangentWS), normalWS);
+                normalWS = normalize(mul(nTS, TBN));
+                #endif
+                return half4(NormalizeNormalPerPixel(normalWS), 0.0);
+            }
             ENDHLSL
         }
     }
