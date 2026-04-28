@@ -15,7 +15,7 @@ Material:
   - _HALFTONESPACE_OBJECTSPACE
   - _HATCHSTYLE_LINE
   - _NORMALMAP
-  - _PATTERNMODE_HATCHING
+  - _PATTERNMODE_HALFTONE
   m_InvalidKeywords: []
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -76,7 +76,7 @@ Material:
     - _EnableInnerLines: 1
     - _HalftoneAngle: 42.9
     - _HalftoneScale: 100
-    - _HalftoneSharpness: 1
+    - _HalftoneSharpness: 8.2
     - _HalftoneSpace: 1
     - _HatchAngle: 75
     - _HatchScale: 100
@@ -94,7 +94,7 @@ Material:
     - _OuterOutlineWidth: 0.005
     - _OutlineDepthBias: 4
     - _OutlineWidth: 0.005
-    - _PatternMode: 1
+    - _PatternMode: 0
     - _RampSmoothing: 0.01
     - _RimPower: 4
     - _RimStrength: 0.3

@@ -195,7 +195,6 @@ Shader "NPR/XToon_2DRamp"
                     float curvature = length(dNdx) + length(dNdy);
                     float t = 1.0 - saturate(curvature * 10.0);
                     return t * (1.0 - _DetailBias) + _DetailBias;
-                    return saturate(t + _DetailBias);
 
                 #else // _DETAILMODE_MANUAL
                     return _ManualDetail;
@@ -246,13 +245,17 @@ Shader "NPR/XToon_2DRamp"
                 float4 baseMap = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv);
                 float3 albedo = baseMap.rgb * _BaseColor.rgb;
 
-                // rampV compresses rampU toward neutral (0.5): abstract = flat lighting.
-                // Affects both lit and shadowed areas so it is visible even on fully-lit surfaces.
+                // rampV = abstraction level (0 = full detail, 1 = abstract).
+                // Compress rampU toward 0.5 so lit AND shadowed areas both flatten —
+                // this is always visible even when the avatar is mostly lit.
+                // Also widens the smoothstep so bands soften as abstraction increases.
                 float abstractU    = lerp(rampU, 0.5, rampV * 0.6);
                 float dynSmoothing = lerp(_RampSmoothing, _RampSmoothing + 0.35, rampV);
                 float shadowMask   = smoothstep(0.5 - dynSmoothing,
                                                 0.5 + dynSmoothing, abstractU);
 
+                // rampColor tints the albedo if a 2D ramp texture is assigned;
+                // defaults to white (no tint) when unassigned.
                 float3 toonAlbedo = albedo * rampColor.rgb;
                 float3 shadowedAlbedo = lerp(toonAlbedo * _ShadowColor.rgb, toonAlbedo, shadowMask);
                 float3 finalColor = lerp(albedo, shadowedAlbedo, _ShadowStrength);
@@ -510,91 +513,7 @@ Shader "NPR/XToon_2DRamp"
             }
             ENDHLSL
         }
-
-        // =================================================================
-        // PASS 4: Depth Normals
-        // Populates URP's screen-space normals texture so hierarchical/Sobel
-        // edge detection sees the avatar's actual normals (including abstract
-        // normal map when enabled).
-        // =================================================================
-        Pass
-        {
-            Name "DepthNormals"
-            Tags { "LightMode" = "DepthNormals" }
-            ZWrite On
-            Cull Back
-
-            HLSLPROGRAM
-            #pragma vertex DNVert
-            #pragma fragment DNFrag
-            #pragma multi_compile_instancing
-            #pragma shader_feature_local _ALPHA_BLEND
-
-            #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
-
-            TEXTURE2D(_BaseMap);           SAMPLER(sampler_BaseMap);
-            TEXTURE2D(_AbstractNormalMap); SAMPLER(sampler_AbstractNormalMap);
-
-            CBUFFER_START(UnityPerMaterial)
-                float4 _BaseMap_ST;
-                float4 _BaseColor;
-                float  _AlphaCutoff;
-                float  _UseAbstractNormals;
-                float  _NormalSmoothing;
-            CBUFFER_END
-
-            struct DNAttr {
-                float4 positionOS : POSITION;
-                float3 normalOS   : NORMAL;
-                float4 tangentOS  : TANGENT;
-                float2 uv         : TEXCOORD0;
-                UNITY_VERTEX_INPUT_INSTANCE_ID
-            };
-            struct DNVary {
-                float4 positionCS  : SV_POSITION;
-                float2 uv          : TEXCOORD0;
-                float3 normalWS    : TEXCOORD1;
-                float3 tangentWS   : TEXCOORD2;
-                float3 bitangentWS : TEXCOORD3;
-                UNITY_VERTEX_OUTPUT_STEREO
-            };
-
-            DNVary DNVert(DNAttr input)
-            {
-                DNVary output;
-                UNITY_SETUP_INSTANCE_ID(input);
-                UNITY_INITIALIZE_VERTEX_OUTPUT_STEREO(output);
-                VertexPositionInputs vPos = GetVertexPositionInputs(input.positionOS.xyz);
-                VertexNormalInputs   vNrm = GetVertexNormalInputs(input.normalOS, input.tangentOS);
-                output.positionCS  = vPos.positionCS;
-                output.uv          = TRANSFORM_TEX(input.uv, _BaseMap);
-                output.normalWS    = vNrm.normalWS;
-                output.tangentWS   = vNrm.tangentWS;
-                output.bitangentWS = vNrm.bitangentWS;
-                return output;
-            }
-
-            float4 DNFrag(DNVary input) : SV_Target
-            {
-                #if _ALPHA_BLEND
-                clip(SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, input.uv).a
-                     * _BaseColor.a - _AlphaCutoff);
-                #endif
-
-                float3 normalWS = normalize(input.normalWS);
-                if (_UseAbstractNormals > 0.5)
-                {
-                    float3 nTS = UnpackNormal(
-                        SAMPLE_TEXTURE2D(_AbstractNormalMap, sampler_AbstractNormalMap, input.uv));
-                    float3x3 TBN = float3x3(normalize(input.tangentWS),
-                                            normalize(input.bitangentWS), normalWS);
-                    normalWS = normalize(mul(nTS, TBN));
-                }
-                return half4(NormalizeNormalPerPixel(normalWS), 0.0);
-            }
-            ENDHLSL
-        }
     }
 
-    // No CustomEditor
+    // No CustomEditor 
 }

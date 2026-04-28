@@ -34,6 +34,7 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
+            #pragma target 3.0
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
@@ -61,7 +62,7 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
             float _DepthFadeEnd;         // Distance where edges fully disappear
 
             // Avatar masking (optional)
-            TEXTURE2D(_AvatarMask);
+            TEXTURE2D_X(_AvatarMask);
             float _UseMask;
 
             // ---- Utility functions ----
@@ -122,14 +123,14 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
             // Detects texture boundaries and fine surface detail
             float ComputeColorEdge(float2 uv, float2 offset)
             {
-                float3 c_tl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
-                    uv + float2(-offset.x,  offset.y)).rgb;
-                float3 c_tr = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
-                    uv + float2( offset.x,  offset.y)).rgb;
-                float3 c_bl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
-                    uv + float2(-offset.x, -offset.y)).rgb;
-                float3 c_br = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp,
-                    uv + float2( offset.x, -offset.y)).rgb;
+                float3 c_tl = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp,
+                    uv + float2(-offset.x,  offset.y), 0).rgb;
+                float3 c_tr = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp,
+                    uv + float2( offset.x,  offset.y), 0).rgb;
+                float3 c_bl = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp,
+                    uv + float2(-offset.x, -offset.y), 0).rgb;
+                float3 c_br = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp,
+                    uv + float2( offset.x, -offset.y), 0).rgb;
 
                 // Use luminance for main detection, add color difference for chromatic edges
                 float lumEdge = RobertsCross(
@@ -146,6 +147,7 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
 
             float4 Frag(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.texcoord;
 
                 // Projection-aware world-space kernel.
@@ -160,7 +162,7 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
 
                 // ---- Adaptive Sensitivity ----
                 // In dark areas, reduce sensitivity to avoid noisy edges
-                float3 centerColor = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).rgb;
+                float3 centerColor = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, 0).rgb;
                 float brightness = Luminance3(centerColor);
                 float adaptiveFactor = lerp(1.0, saturate(brightness * 2.0), _AdaptiveStrength);
 
@@ -199,9 +201,9 @@ Shader "Hidden/PostProcess/HierarchicalEdgeDetection"
                 }
 
                 // ---- Composite edges over source image ----
-                float4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
+                float4 source = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, 0);
                 float avatarMask = _UseMask > 0.5
-                    ? SAMPLE_TEXTURE2D(_AvatarMask, sampler_LinearClamp, uv).r
+                    ? SAMPLE_TEXTURE2D_X_LOD(_AvatarMask, sampler_LinearClamp, uv, 0).r
                     : 1.0;
                 float3 result = lerp(source.rgb, _EdgeColor.rgb, edge * _EdgeColor.a * avatarMask);
 

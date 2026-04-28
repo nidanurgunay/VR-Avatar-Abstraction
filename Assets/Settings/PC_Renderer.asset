@@ -26,9 +26,7 @@ MonoBehaviour:
     probeVolumeBlendStatesCS: {fileID: 7200000, guid: b9a23f869c4fd45f19c5ada54dd82176, type: 3}
   m_RendererFeatures:
   - {fileID: 7833122117494664109}
-  - {fileID: 3092693815963985181}
-  - {fileID: 5953375477926547909}
-  m_RendererFeatureMap: ad6b866f10d7b46c1da594cba374eb2ac551557074a39e52
+  m_RendererFeatureMap: ad6b866f10d7b46c
   m_UseNativeRenderPass: 1
   xrSystemData: {fileID: 0}
   postProcessData: {fileID: 11400000, guid: 41439944d30ece34e96484bdb6645b55, type: 2}
@@ -54,46 +52,6 @@ MonoBehaviour:
   m_DepthTextureFormat: 0
   m_AccurateGbufferNormals: 0
   m_IntermediateTextureMode: 0
---- !u!114 &3092693815963985181
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7678710a057294b82b798f4d8e5aaeb9, type: 3}
-  m_Name: ToonOutlineRendererFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  settings:
-    renderPassEvent: 300
-    layerMask:
-      serializedVersion: 2
-      m_Bits: 4294967295
-    outlinePassName: ToonOutline
---- !u!114 &5953375477926547909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 72a37147cf30146778e0fd9258a1018a, type: 3}
-  m_Name: KuwaharaFilterFeature
-  m_EditorClassIdentifier: 
-  m_Active: 1
-  settings:
-    renderPassEvent: 550
-    kuwaharaShader: {fileID: 4800000, guid: b2466d13b2c9f4b5c80fbef454266920, type: 3}
-    kernelSize: 4
-    sectorCount: 8
-    sharpness: 8
-    hardness: 8
-    zeroCrossing: 0.58
 --- !u!114 &7833122117494664109
 MonoBehaviour:
   m_ObjectHideFlags: 0

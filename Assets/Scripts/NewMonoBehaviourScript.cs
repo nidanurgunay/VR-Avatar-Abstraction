@@ -27,16 +27,71 @@ public class VRAvatarAnimationTrigger : MonoBehaviour
     
     private XRBaseInteractable interactable;
     private int currentAnimationIndex = 0;
-    
+
+    XRBaseInteractable EnsureInteractableOnProxy()
+    {
+        // Create/find a child object on Default layer so controller rays (usually Default) can hit it,
+        // while the skinned mesh stays on an Avatar* layer for post-process masking.
+        const string proxyName = "InteractionProxy";
+
+        Transform proxyTransform = transform.Find(proxyName);
+        if (proxyTransform == null)
+        {
+            var proxyGo = new GameObject(proxyName);
+            proxyTransform = proxyGo.transform;
+            proxyTransform.SetParent(transform, false);
+            proxyGo.layer = 0; // Default
+        }
+
+        var proxy = proxyTransform.gameObject;
+        if (proxy.layer != 0)
+            proxy.layer = 0;
+
+        // Ensure a collider exists on the proxy.
+        var existingCollider = proxy.GetComponent<Collider>();
+        if (existingCollider == null)
+        {
+            var box = proxy.AddComponent<BoxCollider>();
+            box.isTrigger = true;
+
+            // Size the collider to roughly the visible renderer bounds (local space approximation).
+            var renderers = GetComponentsInChildren<Renderer>(true);
+            var hasBounds = false;
+            Bounds bounds = default;
+            foreach (var r in renderers)
+            {
+                if (r == null) continue;
+                if (!hasBounds) { bounds = r.bounds; hasBounds = true; }
+                else bounds.Encapsulate(r.bounds);
+            }
+
+            if (hasBounds)
+            {
+                // Convert world bounds into proxy local space.
+                Vector3 centerLocal = proxyTransform.InverseTransformPoint(bounds.center);
+                Vector3 sizeLocal = bounds.size;
+                box.center = centerLocal;
+                box.size = sizeLocal;
+            }
+        }
+
+        // Ensure an interactable exists on the proxy.
+        var proxyInteractable = proxy.GetComponent<XRBaseInteractable>();
+        if (proxyInteractable == null)
+            proxyInteractable = proxy.AddComponent<XRSimpleInteractable>();
+
+        return proxyInteractable;
+    }
+
     void Awake()
     {
-        // Try to find any XR interactable component
-        interactable = GetComponent<XRBaseInteractable>();
+        // Prefer a proxy interactable on Default layer so XR rays can hit it even if this avatar is on an Avatar* layer.
+        interactable = GetComponentInChildren<XRBaseInteractable>(true);
         
         if (interactable == null)
         {
-            Debug.LogWarning("[ANIMATORSCRIPT] No XR Interactable found, adding XRSimpleInteractable");
-            interactable = gameObject.AddComponent<XRSimpleInteractable>();
+            Debug.LogWarning("[ANIMATORSCRIPT] No XR Interactable found, creating InteractionProxy + XRSimpleInteractable");
+            interactable = EnsureInteractableOnProxy();
         }
         
         if (animator == null)
@@ -47,22 +102,32 @@ public class VRAvatarAnimationTrigger : MonoBehaviour
         Debug.Log($"[ANIMATORSCRIPT] Using interactable type: {interactable.GetType().Name}");
     }
     void Start()
-{
-    // Force animator to reset to Idle state
-    if (animator != null)
     {
+        if (animator == null)
+            return;
+
+        // On device, animators can appear "stuck" due to culling or disabled state.
+        animator.enabled = true;
+        animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+        animator.updateMode = AnimatorUpdateMode.Normal;
+
+        if (animator.runtimeAnimatorController == null)
+        {
+            Debug.LogError("[ANIMATORSCRIPT] Animator has no controller assigned.");
+            return;
+        }
+
         // Reset all triggers
         foreach (var trigger in animationTriggers)
-        {
             animator.ResetTrigger(trigger);
-        }
-        
-        // Force play the Idle state
+
+        // Ensure a clean initial state, then enter Idle.
+        animator.Rebind();
+        animator.Update(0f);
         animator.Play("Idle", 0, 0f);
-        
-        Debug.Log("[ANIMATORSCRIPT] Animator forced to Idle state on start");
+
+        Debug.Log("[ANIMATORSCRIPT] Animator initialized and forced to Idle state on start");
     }
-}
     void OnEnable()
     {
         if (interactable == null) return;

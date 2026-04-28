@@ -15,6 +15,7 @@ Shader "Hidden/AvatarMaskCapture"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
+            #pragma target 3.0
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
 
             struct Attributes { float4 positionOS : POSITION; };

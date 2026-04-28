@@ -52,11 +52,11 @@ public class AvatarShaderController : MonoBehaviour
             rend.materials = newMats;
         }
 
-        outerOutlineSlider.onValueChanged.AddListener(SetOutlineWidth);
-        innerLineThresholdSlider.onValueChanged.AddListener(SetEdgeThreshold);
-        innerLineBlurSlider.onValueChanged.AddListener(SetInnerLineBlur);
-        innerLineStrengthSlider.onValueChanged.AddListener(SetInnerLineStrength);
-        alphaCutoffSlider.onValueChanged.AddListener(SetAlphaCutoff);
+        if (outerOutlineSlider != null)        outerOutlineSlider.onValueChanged.AddListener(SetOutlineWidth);
+        if (innerLineThresholdSlider != null)  innerLineThresholdSlider.onValueChanged.AddListener(SetEdgeThreshold);
+        if (innerLineBlurSlider != null)       innerLineBlurSlider.onValueChanged.AddListener(SetInnerLineBlur);
+        if (innerLineStrengthSlider != null)   innerLineStrengthSlider.onValueChanged.AddListener(SetInnerLineStrength);
+        if (alphaCutoffSlider != null)         alphaCutoffSlider.onValueChanged.AddListener(SetAlphaCutoff);
 
         // Set slider ranges based on shader properties
         SetSliderRanges();

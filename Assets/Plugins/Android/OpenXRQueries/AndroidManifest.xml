@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.avatarshader.openxrqueries">
+  <!--
+    Android 11+ package visibility:
+    OpenXR loader may need to query/bind to the runtime broker package/service.
+    Without <queries>, the loader can fail with:
+      "Could access neither the installable nor system runtime broker."
+  -->
+  <queries>
+    <!-- Common OpenXR runtime broker intent (XR_KHR_loader_init_android) -->
+    <intent>
+      <action android:name="org.khronos.openxr.runtime_broker" />
+    </intent>
+
+    <!-- Known runtime package names (device/vendor dependent) -->
+    <package android:name="com.oculus.openxr" />
+    <package android:name="com.meta.openxr" />
+    <package android:name="com.meta.xr.openxr" />
+  </queries>
+</manifest>
+

@@ -218,7 +218,7 @@ public class V10ShaderController : MonoBehaviour
         UpdateSlider(diagonalWeightSlider, mat.GetFloat("_GaussianDiagonalWeight"));
         UpdateSlider(thresholdMinSlider, mat.GetFloat("_ThresholdMinMultiplier"));
         UpdateSlider(thresholdMaxSlider, mat.GetFloat("_ThresholdMaxMultiplier"));
-        UpdateSlider(smoothstepPassesSlider, mat.GetFloat("_SmoothstepPasses"));
+        if (mat.HasProperty("_SmoothstepPasses")) UpdateSlider(smoothstepPassesSlider, mat.GetFloat("_SmoothstepPasses"));
         UpdateSlider(smoothstepTightnessSlider, mat.GetFloat("_SmoothstepTightness"));
         UpdateSlider(powerCurveSlider, mat.GetFloat("_PowerCurve"));
         UpdateSlider(normalEdgeThresholdSlider, mat.GetFloat("_NormalEdgeThreshold"));

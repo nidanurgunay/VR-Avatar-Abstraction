@@ -32,6 +32,7 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment Frag
+            #pragma target 3.0
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
@@ -55,7 +56,7 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
             float _DepthFadeStart;
             float _DepthFadeEnd;
 
-            TEXTURE2D(_AvatarMask);
+            TEXTURE2D_X(_AvatarMask);
             float _UseMask;
 
             // ---- Utility ----
@@ -114,14 +115,14 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
             // ---- LAYER 3: Color/Luminance Edges (Sobel on luminance) ----
             float ComputeColorEdge(float2 uv, float2 off)
             {
-                float3 c_tl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x,  off.y)).rgb;
-                float3 c_t  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(     0,  off.y)).rgb;
-                float3 c_tr = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( off.x,  off.y)).rgb;
-                float3 c_l  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x,      0)).rgb;
-                float3 c_r  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( off.x,      0)).rgb;
-                float3 c_bl = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x, -off.y)).rgb;
-                float3 c_b  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2(     0, -off.y)).rgb;
-                float3 c_br = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + float2( off.x, -off.y)).rgb;
+                float3 c_tl = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x,  off.y), 0).rgb;
+                float3 c_t  = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2(     0,  off.y), 0).rgb;
+                float3 c_tr = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2( off.x,  off.y), 0).rgb;
+                float3 c_l  = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x,      0), 0).rgb;
+                float3 c_r  = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2( off.x,      0), 0).rgb;
+                float3 c_bl = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2(-off.x, -off.y), 0).rgb;
+                float3 c_b  = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2(     0, -off.y), 0).rgb;
+                float3 c_br = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + float2( off.x, -off.y), 0).rgb;
 
                 float ltl = Luminance3(c_tl), lt = Luminance3(c_t), ltr = Luminance3(c_tr);
                 float ll  = Luminance3(c_l),                         lr  = Luminance3(c_r);
@@ -134,6 +135,7 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
 
             float4 Frag(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.texcoord;
                 // Projection-aware world-space kernel.
                 // projScale = cot(fov/2) * aspect — encodes both FOV and aspect ratio.
@@ -146,7 +148,7 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
                                  * projScale / max(centerDepth, 0.1);
 
                 // ---- Adaptive Sensitivity ----
-                float3 centerColor = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv).rgb;
+                float3 centerColor = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, 0).rgb;
                 float brightness = Luminance3(centerColor);
                 float adaptiveFactor = lerp(1.0, saturate(brightness * 2.0), _AdaptiveStrength);
 
@@ -179,9 +181,9 @@ Shader "Hidden/PostProcess/SobelEdgeDetection"
                 }
 
                 // ---- Composite ----
-                float4 source = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
+                float4 source = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, 0);
                 float avatarMask = _UseMask > 0.5
-                    ? SAMPLE_TEXTURE2D(_AvatarMask, sampler_LinearClamp, uv).r
+                    ? SAMPLE_TEXTURE2D_X_LOD(_AvatarMask, sampler_LinearClamp, uv, 0).r
                     : 1.0;
                 float3 result = lerp(source.rgb, _EdgeColor.rgb, edge * _EdgeColor.a * avatarMask);
                 return float4(result, source.a);

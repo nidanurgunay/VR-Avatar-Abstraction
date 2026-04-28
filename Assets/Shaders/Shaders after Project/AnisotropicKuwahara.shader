@@ -28,6 +28,7 @@ Shader "NPR/AnisotropicKuwahara"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment FragStructureTensor
+            #pragma target 3.0
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
@@ -39,17 +40,17 @@ Shader "NPR/AnisotropicKuwahara"
 
             float4 FragStructureTensor(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.texcoord;
                 float2 d  = _BlitTexture_TexelSize.xy;
-
-                float tl = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x,  d.y))).rgb);
-                float  l = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x,  0.0))).rgb);
-                float bl = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x, -d.y))).rgb);
-                float  t = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( 0.0,  d.y))).rgb);
-                float  b = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( 0.0, -d.y))).rgb);
-                float tr = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x,  d.y))).rgb);
-                float  r = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x,  0.0))).rgb);
-                float br = Luminance3(SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x, -d.y))).rgb);
+                float tl = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x,  d.y)), 0).rgb);
+                float  l = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x,  0.0)), 0).rgb);
+                float bl = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2(-d.x, -d.y)), 0).rgb);
+                float  t = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( 0.0,  d.y)), 0).rgb);
+                float  b = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( 0.0, -d.y)), 0).rgb);
+                float tr = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x,  d.y)), 0).rgb);
+                float  r = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x,  0.0)), 0).rgb);
+                float br = Luminance3(SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, saturate(uv + float2( d.x, -d.y)), 0).rgb);
 
                 float gx = -tl - 2.0*l - bl + tr + 2.0*r + br;
                 float gy = -tl - 2.0*t - tr + bl + 2.0*b + br;
@@ -69,6 +70,7 @@ Shader "NPR/AnisotropicKuwahara"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment FragTensorBlur
+            #pragma target 3.0
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
@@ -77,14 +79,15 @@ Shader "NPR/AnisotropicKuwahara"
 
             float4 FragTensorBlur(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv     = input.texcoord;
                 float2 offset = _BlurDirection.xy * _BlitTexture_TexelSize.xy;
 
-                float4 result  = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv - 2.0*offset) * 0.0625;
-                       result += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv -     offset)  * 0.25;
-                       result += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv             )  * 0.375;
-                       result += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv +     offset)  * 0.25;
-                       result += SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv + 2.0*offset)  * 0.0625;
+                float4 result  = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv - 2.0*offset, 0) * 0.0625;
+                       result += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv -     offset, 0)  * 0.25;
+                       result += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv             , 0)  * 0.375;
+                       result += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv +     offset, 0)  * 0.25;
+                       result += SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv + 2.0*offset, 0)  * 0.0625;
                 return result;
             }
             ENDHLSL
@@ -100,14 +103,21 @@ Shader "NPR/AnisotropicKuwahara"
             HLSLPROGRAM
             #pragma vertex Vert
             #pragma fragment FragKuwahara
+            #pragma target 3.0
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
-            TEXTURE2D(_StructureTensor);
+            TEXTURE2D_X(_StructureTensor);
             SAMPLER(sampler_StructureTensor);
 
-            #define MAX_RADIUS 16
+            // Mobile/standalone VR GPUs can hit watchdog timeouts with large kernels.
+            // Cap the compile-time loop bounds more aggressively on mobile platforms.
+            #if defined(SHADER_API_MOBILE)
+                #define MAX_RADIUS 6
+            #else
+                #define MAX_RADIUS 16
+            #endif
 
             int   _KernelSize;
             int   _SectorCount;
@@ -117,11 +127,12 @@ Shader "NPR/AnisotropicKuwahara"
 
             float4 FragKuwahara(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv = input.texcoord;
                 float2 d  = _BlitTexture_TexelSize.xy;
 
                 // --- Read smoothed structure tensor ---
-                float3 tensor = SAMPLE_TEXTURE2D(_StructureTensor, sampler_StructureTensor, uv).rgb;
+                float3 tensor = SAMPLE_TEXTURE2D_X_LOD(_StructureTensor, sampler_StructureTensor, uv, 0).rgb;
                 float E = tensor.r;
                 float F = tensor.g;
                 float G = tensor.b;
@@ -185,7 +196,8 @@ Shader "NPR/AnisotropicKuwahara"
                         float w    = exp(-2.0*dist*dist);
 
                         float2 sampleUV = saturate(uv + float2(float(i), float(j)) * d);
-                        float4 col = SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, sampleUV);
+                        // Explicit LOD avoids undefined gradients on mobile when sampling inside loops.
+                        float4 col = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, sampleUV, 0);
 
                         sectorMean    [sectorIdx] += col * w;
                         sectorWeight  [sectorIdx] += w;
@@ -216,7 +228,7 @@ Shader "NPR/AnisotropicKuwahara"
 
                 return (totalW > 0.0)
                     ? result / totalW
-                    : SAMPLE_TEXTURE2D_X(_BlitTexture, sampler_LinearClamp, uv);
+                    : SAMPLE_TEXTURE2D_X_LOD(_BlitTexture, sampler_LinearClamp, uv, 0);
             }
             ENDHLSL
         }
@@ -236,15 +248,16 @@ Shader "NPR/AnisotropicKuwahara"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.core/Runtime/Utilities/Blit.hlsl"
 
-            TEXTURE2D(_KuwaharaResult);
-            TEXTURE2D(_AvatarMask);
+            TEXTURE2D_X(_KuwaharaResult);
+            TEXTURE2D_X(_AvatarMask);
 
             float4 FragMaskedComposite(Varyings input) : SV_Target
             {
+                UNITY_SETUP_STEREO_EYE_INDEX_POST_VERTEX(input);
                 float2 uv      = input.texcoord;
-                float4 original = SAMPLE_TEXTURE2D_X(_BlitTexture,    sampler_LinearClamp, uv);
-                float4 kuwahara = SAMPLE_TEXTURE2D  (_KuwaharaResult, sampler_LinearClamp, uv);
-                float  mask     = SAMPLE_TEXTURE2D  (_AvatarMask,     sampler_LinearClamp, uv).r;
+                float4 original = SAMPLE_TEXTURE2D_X_LOD(_BlitTexture,     sampler_LinearClamp, uv, 0);
+                float4 kuwahara = SAMPLE_TEXTURE2D_X_LOD(_KuwaharaResult,  sampler_LinearClamp, uv, 0);
+                float  mask     = SAMPLE_TEXTURE2D_X_LOD(_AvatarMask,      sampler_LinearClamp, uv, 0).r;
                 return lerp(original, kuwahara, mask);
             }
             ENDHLSL

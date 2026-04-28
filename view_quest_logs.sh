@@ -7,9 +7,19 @@ echo "=== Connecting to Quest device ==="
 $ADB devices
 
 echo ""
-echo "=== Starting log stream (filtered for XR Debug and Unity) ==="
+echo "=== Clearing logcat buffer ==="
+$ADB logcat -c
+
+echo ""
+echo "=== Starting log stream (Unity/XR/Oculus/OpenXR) ==="
 echo "Press Ctrl+C to stop"
 echo ""
 
-# Filter for our XRDebugLogger and Unity messages
-$ADB logcat -s Unity:V ActivityManager:I | grep --line-buffered -E "XR Debug|XR Origin|Camera|TrackedPoseDriver|UNITY"
+# Common useful tags on Quest/Android XR
+# Note: Avoid over-filtering via grep; we want the first real error line.
+$ADB logcat \
+  -s Unity:V \
+  -s OpenXR-Loader:V \
+  -s OVRPlugin:V \
+  -s XR:V \
+  -s ActivityManager:I
